@@ -27,6 +27,6 @@ export function initWorld(scene) {
         obstacleColliders.push(new THREE.Box3().setFromObject(cube));
     };
 
-    createCube(3, 3, "src/assets/kirk1.jpg");
-    createCube(-3, -2, "src/assets/kirk2.jpg");
+    createCube(3, 3, "../public/textures/kirk1.jpg");
+    createCube(-3, -2, "../public/textures/kirk2.jpg");
 }

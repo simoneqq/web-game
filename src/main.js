@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { setupInput } from "./input.js";
-import { initWorld } from "./world.js";
-import { Player } from "./player.js";
+import { setupInput } from "./core/Controls.js";
+import { initWorld } from "./scenes/MainScene.js";
+import { Player } from "./core/Player.js";
 
 let scene, camera, renderer, player, prevTime = performance.now();
 

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
-import { keys } from "./input.js";
-import { obstacleColliders, mapSize } from "./world.js";
+import { keys } from "./Controls.js";
+import { obstacleColliders, mapSize } from "../scenes/MainScene.js";
 
 export class Player {
     constructor(camera, domElement) {
@@ -12,7 +12,7 @@ export class Player {
         this.canJump = false;
     }
 
-    update(delta) {
+    update(delta) { 
         if (!this.controls.isLocked) return;
 
         const obj = this.controls.object;
