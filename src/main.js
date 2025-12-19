@@ -63,7 +63,7 @@ const createScene = function () {
   box.position.y = 1;
 
   const boxMat = new BABYLON.StandardMaterial("boxMat");
-  boxMat.diffuseTexture = new BABYLON.Texture("./textures/hociak.jpg");
+  boxMat.diffuseTexture = new BABYLON.Texture("../pobrane (3).jpg");
   box.material = boxMat;
 
   box.checkCollisions = true;
