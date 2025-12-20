@@ -27,19 +27,19 @@ export function initWorld(scene) {
         obstacleColliders.push(new THREE.Box3().setFromObject(cube));
     };
 
-    createCube(3, 3, 0.5, "../public/textures/kirk1.jpg");
-    createCube(-3, -2, 0.5, "../public/textures/hociak.jpg");
-    createCube(-3, -2, 0.5, "../public/textures/hociak.jpg");
-    createCube(-3, -1, 0.5, "../public/textures/kirk2.jpg");
-    createCube(-3, 0, 0.5, "../public/textures/kirk2.jpg");
-    createCube(-2, -1, 0.5, "../public/textures/kirk2.jpg");
-    createCube(-1, -1, 0.5, "../public/textures/kirk2.jpg");
+    createCube(3, 3, 0.5, "../textures/kirk1.jpg");
+    createCube(-3, -2, 0.5, "../textures/hociak.jpg");
+    createCube(-3, -2, 0.5, "../textures/hociak.jpg");
+    createCube(-3, -1, 0.5, "../textures/kirk2.jpg");
+    createCube(-3, 0, 0.5, "../textures/kirk2.jpg");
+    createCube(-2, -1, 0.5, "../textures/kirk2.jpg");
+    createCube(-1, -1, 0.5, "../textures/kirk2.jpg");
 
-    createCube(1, 1, 0.5, "../public/textures/kirk4.jpg");
-    createCube(1, 2, 0.5, "../public/textures/kirk4.jpg");
-    createCube(1, 3, 0.5, "../public/textures/kirk4.jpg");
-    createCube(1, 2, 1.5, "../public/textures/kirk4.jpg");
-    createCube(1, 2, 2.5, "../public/textures/hociak.jpg");
+    createCube(1, 1, 0.5, "../textures/kirk4.jpg");
+    createCube(1, 2, 0.5, "../textures/kirk4.jpg");
+    createCube(1, 3, 0.5, "../textures/kirk4.jpg");
+    createCube(1, 2, 1.5, "../textures/kirk4.jpg");
+    createCube(1, 2, 2.5, "../textures/hociak.jpg");
     
 
 }
