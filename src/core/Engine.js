@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { setupInput } from "./Controls.js";
 import { initWorld } from "../scenes/MainScene.js";
 import { Player } from "./Player.js";
+import Stats from "three/examples/jsm/libs/stats.module.js";
 
 export class Engine {
   constructor() {
@@ -9,6 +10,9 @@ export class Engine {
     this.camera = null;
     this.renderer = null;
     this.player = null;
+
+    this.devMode = false;
+    this.stats = null;
   }
 
   init() {
@@ -33,7 +37,15 @@ export class Engine {
     this.scene.add(this.player.controls.object);
 
     this.setUpPointerLock();
-    window.addEventListener("resize", this.onWindowResize());
+
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "F4") {
+        this.devMode ? this.disableDevMode() : this.enableDevMode();
+      }
+    });
+
+    this.onWindowResize = this.onWindowResize.bind(this);
+    window.addEventListener("resize", this.onWindowResize);
   }
 
   setUpPointerLock() {
@@ -50,6 +62,22 @@ export class Engine {
     this.player.controls.addEventListener("unlock", () => {
       instructions.style.display = "block";
     });
+  }
+
+  enableDevMode() {
+    if (this.devMode) return;
+
+    this.devMode = true;
+    this.stats = new Stats();
+    document.body.appendChild(this.stats.dom);
+  }
+
+  disableDevMode() {
+    if (!this.devMode) return;
+
+    this.devMode = false;
+    document.body.removeChild(this.stats.dom);
+    this.stats = null;
   }
 
   onWindowResize() {

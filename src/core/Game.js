@@ -21,5 +21,9 @@ export class Game {
 
     this.engine.update(delta);
     this.engine.render();
+    
+    if (this.engine.devMode && this.engine.stats) {
+      this.engine.stats.update();
+    }
   }
 }
