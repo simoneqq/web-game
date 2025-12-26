@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export const obstacleColliders = [];
-export const mapSize = 20;
+export const mapSize = 100;
 
 export function initWorld(scene) {
     scene.background = new THREE.Color(0x87ceeb);

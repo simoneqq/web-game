@@ -3,22 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Gra FPS Three.js - Poprawiona</title>
-    <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #instructions {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 30px;
-            border-radius: 15px;
-            cursor: pointer;
-            border: 2px solid #555;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -28,6 +13,8 @@
         <p>Myszka - Rozglądanie</p>
         <p>Spacja - Skok</p>
     </div>
+
+    <div id="crosshair"></div>
 
     <script type="module" src="./src/main.js" ></script>
 </body>
