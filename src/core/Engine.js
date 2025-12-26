@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import { setupInput } from "./Controls.js";
 import { initWorld } from "../scenes/MainScene.js";
+import { setupInput } from "./Controls.js";
 import { Player } from "./Player.js";
-import Stats from "three/examples/jsm/libs/stats.module.js";
+import { DevTools } from "./DevTools.js"; // Importujemy nową klasę
 
 export class Engine {
   constructor() {
@@ -10,20 +10,12 @@ export class Engine {
     this.camera = null;
     this.renderer = null;
     this.player = null;
-
-    this.devMode = false;
-    this.stats = null;
+    this.devTools = null; // Zamiast devMode i stats
   }
 
   init() {
     this.scene = new THREE.Scene();
-
-    this.camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
+    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -36,11 +28,14 @@ export class Engine {
     this.player = new Player(this.camera, document.body);
     this.scene.add(this.player.controls.object);
 
+    // Inicjalizacja DevTools
+    this.devTools = new DevTools(this.scene, this.player);
+
     this.setUpPointerLock();
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "F4") {
-        this.devMode ? this.disableDevMode() : this.enableDevMode();
+        this.devTools.toggle(); // Wywołujemy metodę z nowej klasy
       }
     });
 
@@ -50,34 +45,9 @@ export class Engine {
 
   setUpPointerLock() {
     const instructions = document.getElementById("instructions");
-
-    instructions.addEventListener("click", () => {
-      this.player.controls.lock();
-    });
-
-    this.player.controls.addEventListener("lock", () => {
-      instructions.style.display = "none";
-    });
-
-    this.player.controls.addEventListener("unlock", () => {
-      instructions.style.display = "block";
-    });
-  }
-
-  enableDevMode() {
-    if (this.devMode) return;
-
-    this.devMode = true;
-    this.stats = new Stats();
-    document.body.appendChild(this.stats.dom);
-  }
-
-  disableDevMode() {
-    if (!this.devMode) return;
-
-    this.devMode = false;
-    document.body.removeChild(this.stats.dom);
-    this.stats = null;
+    instructions.addEventListener("click", () => this.player.controls.lock());
+    this.player.controls.addEventListener("lock", () => instructions.style.display = "none");
+    this.player.controls.addEventListener("unlock", () => instructions.style.display = "block");
   }
 
   onWindowResize() {
@@ -88,6 +58,7 @@ export class Engine {
 
   update(delta) {
     this.player.update(delta);
+    this.devTools.update(); // Przekazujemy update do DevTools
   }
 
   render() {
