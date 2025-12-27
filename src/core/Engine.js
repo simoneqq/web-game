@@ -3,6 +3,7 @@ import { initWorld } from "../scenes/MainScene.js";
 import { setupInput } from "./Controls.js";
 import { Player } from "./Player.js";
 import { DevTools } from "./DevTools.js"; // Importujemy nową klasę
+import { loadWorld } from "../scenes/World.js";
 
 export class Engine {
   constructor() {
@@ -23,7 +24,8 @@ export class Engine {
     document.body.appendChild(this.renderer.domElement);
 
     setupInput();
-    initWorld(this.scene);
+    // initWorld(this.scene);
+    loadWorld(this.scene);
 
     this.player = new Player(this.camera, document.body);
     this.scene.add(this.player.controls.object);
