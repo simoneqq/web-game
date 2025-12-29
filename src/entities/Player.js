@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
-import { keys } from "./Controls.js";
+import { keys } from "../core/Controls.js";
 import { obstacleColliders, mapSize } from "../scenes/MainScene.js";
 
 export class Player {
@@ -167,3 +167,146 @@ export class Player {
     }
   }
 }
+
+/*
+import * as THREE from "three";
+import { Capsule } from "three/addons/math/Capsule.js";
+import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+import { keys } from "../core/Controls.js";
+import { worldOctree } from "../core/Physics.js"; // Upewnij się, że ścieżka jest poprawna
+
+export class Player {
+  constructor(camera, domElement) {
+    this.camera = camera;
+    this.controls = new PointerLockControls(camera, domElement);
+    
+    // Fizyka
+    this.velocity = new THREE.Vector3();
+    this.onFloor = false;
+
+    // Kapsuła kolizji (zamiast Box3)
+    // start: dół kapsuły, end: góra kapsuły, radius: promień
+    this.collider = new Capsule(
+        new THREE.Vector3(0, 0.35, 0), 
+        new THREE.Vector3(0, 1.6, 0), 
+        0.35
+    );
+
+    // Parametry wysokości (zachowane z Twojego kodu)
+    this.standingHeight = 1.6;
+    this.crouchHeight = 0.8;
+    this.currentHeight = 1.6;
+    
+    // Parametry ruchu (zachowane z Twojego kodu)
+    this.speed = 100.0;
+    this.runSpeed = 180.0;
+    this.crouchSpeed = 50.0;
+    this.jumpForce = 15.0; // Lekka korekta dla fizyki wektorowej
+    this.damping = 10.0;   // Siła hamowania
+  }
+
+  update(delta) {
+    if (!this.controls.isLocked) return;
+
+    // 1. Obsługa Kucania (Wysokość Kapsuły)
+    const targetHeight = keys.crouch ? this.crouchHeight : this.standingHeight;
+    
+    // Płynna zmiana wysokości (Lerp)
+    this.currentHeight = THREE.MathUtils.lerp(this.currentHeight, targetHeight, delta * 10);
+    
+    // Aktualizacja wysokości kapsuły fizycznej
+    // Dół jest zawsze na 0.35 (promień), góra się zmienia
+    this.collider.end.y = this.collider.start.y + this.currentHeight;
+
+    // 2. Logika Prędkości (Input)
+    let moveSpeed = this.speed;
+    if (keys.sprint && !keys.crouch) moveSpeed = this.runSpeed;
+    if (keys.crouch) moveSpeed = this.crouchSpeed;
+
+    // Hamowanie (Damping) - tak jak w Twoim kodzie
+    // Aplikujemy opór powietrza dla osi X i Z
+    this.velocity.x -= this.velocity.x * this.damping * delta;
+    this.velocity.z -= this.velocity.z * this.damping * delta;
+
+    // Grawitacja
+    if (!this.onFloor) {
+        this.velocity.y -= 30.0 * delta;
+    }
+
+    // 3. Obliczanie wektora ruchu na podstawie patrzenia kamery
+    // To zastępuje controls.moveForward/moveRight
+    if (this.onFloor) {
+        const forward = new THREE.Vector3(0, 0, -1).applyEuler(this.camera.rotation);
+        forward.y = 0;
+        forward.normalize();
+
+        const right = new THREE.Vector3(1, 0, 0).applyEuler(this.camera.rotation);
+        right.y = 0;
+        right.normalize();
+
+        const inputVector = new THREE.Vector3();
+        
+        if (keys.forward) inputVector.add(forward);
+        if (keys.backward) inputVector.sub(forward);
+        if (keys.right) inputVector.add(right);
+        if (keys.left) inputVector.sub(right);
+        
+        // Jeśli jest input, dodajemy przyspieszenie
+        if (inputVector.lengthSq() > 0) {
+            inputVector.normalize();
+            this.velocity.add(inputVector.multiplyScalar(moveSpeed * delta));
+        }
+        
+        // Skok
+        if (keys.jump) {
+            this.velocity.y = this.jumpForce;
+            this.onFloor = false; // Odrywamy się od ziemi
+        }
+    }
+
+    // 4. Aplikowanie ruchu do Kapsuły
+    const deltaPosition = this.velocity.clone().multiplyScalar(delta);
+    this.collider.translate(deltaPosition);
+
+    // 5. Sprawdzanie Kolizji (Octree)
+    this.checkCollisions();
+
+    // 6. Synchronizacja Kamery z Kapsułą
+    // Kamera jest "oczami", więc ustawiamy ją na górze kapsuły minus mały margines
+    this.camera.position.copy(this.collider.end).sub(new THREE.Vector3(0, 0.1, 0));
+
+    // Respawn (Teleportacja jak spadniesz)
+    if (this.camera.position.y < -15) {
+        this.collider.start.set(0, 0.35, 0);
+        this.collider.end.set(0, this.standingHeight, 0);
+        this.velocity.set(0, 0, 0);
+        this.camera.position.set(0, this.standingHeight, 0);
+    }
+  }
+
+  checkCollisions() {
+    // To jest serce nowego systemu - jedna linijka zamiast pętli po boxach
+    const result = worldOctree.capsuleIntersect(this.collider);
+    
+    this.onFloor = false;
+
+    if (result) {
+        // Czy to, w co uderzyliśmy, jest podłogą? (normalna skierowana w górę)
+        this.onFloor = result.normal.y > 0;
+
+        if (!this.onFloor) {
+            // Ślizganie po ścianach (Wall Slide)
+            // Usuwamy część prędkości skierowaną w ścianę
+            this.velocity.addScaledVector(result.normal, -result.normal.dot(this.velocity));
+        } else {
+            // Lądowanie na ziemi
+            // Jeśli spadaliśmy, zerujemy prędkość pionową
+            if (this.velocity.y < 0) this.velocity.y = 0;
+        }
+
+        // Wypchnięcie gracza z obiektu o głębokość kolizji
+        this.collider.translate(result.normal.multiplyScalar(result.depth));
+    }
+  }
+}
+*/
