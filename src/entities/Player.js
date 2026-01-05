@@ -4,6 +4,15 @@ import { PointerLockControls } from "three/addons/controls/PointerLockControls.j
 import { keys } from "../core/Controls.js";
 import { worldOctree } from "../core/Physics.js";
 
+// Stamina Configuration
+const MAX_STAMINA = 100;
+const STAMINA_DEPLETION_RATE = 35; // Per second
+const RECOVERY_RATE_BASE = 15; // Post-exhaustion recovery speed
+const RECOVERY_RATE_FAST = 30; // Normal recovery speed (2x base)
+const EXHAUSTION_COOLDOWN = 3.0; // Seconds to wait after empty
+const NORMAL_RECOVERY_DELAY = 1.0; // Seconds to wait if not empty
+const UNLOCK_THRESHOLD = 50.0; // Re-enable sprint when stamina hits 50%
+
 export class Player {
   constructor(camera, domElement) {
     this.camera = camera;
@@ -25,6 +34,68 @@ export class Player {
       new THREE.Vector3(0, 1.6, 0),
       0.35
     );
+
+    // SYSTEM STAMINY
+    this.stamina = MAX_STAMINA;
+    this.isExhausted = false;
+    this.exhaustionTimer = 0;
+    this.recoveryDelayTimer = 0;
+    this.canSprint = true;
+
+    // UI STAMINY
+    this.staminaBarElement = document.getElementById('stamina-bar');
+  }
+
+  updateStamina(delta) {
+    const isMoving = keys.forward || keys.backward || keys.left || keys.right;
+    const isTryingToSprint = keys.sprint && isMoving && !keys.crouch && this.onFloor;
+
+    if (this.isExhausted) {
+        // Blokada po wyczerpaniu staminy (3s delay)
+        this.exhaustionTimer += delta;
+        this.canSprint = false;
+
+        // Start regeneracji po 3s od wyczerpania
+        if (this.exhaustionTimer >= EXHAUSTION_COOLDOWN) {
+            this.stamina = Math.min(MAX_STAMINA, this.stamina + RECOVERY_RATE_BASE * delta);
+            
+            // Włączenie sprintu przy 50% staminy
+            if (this.stamina >= UNLOCK_THRESHOLD) {
+                this.isExhausted = false;
+                this.canSprint = true;
+            }
+        }
+    } else {
+        // Normalny stan
+        if (isTryingToSprint) {
+            // Używanie staminy
+            this.stamina = Math.max(0, this.stamina - STAMINA_DEPLETION_RATE * delta);
+            this.recoveryDelayTimer = 0; // Resetowanie timera regeneracji
+
+            if (this.stamina <= 0) {
+                this.isExhausted = true;
+                this.exhaustionTimer = 0;
+                this.canSprint = false;
+            }
+        } else {
+            // Normalne regenerowanie staminy
+            this.recoveryDelayTimer += delta;
+            if (this.recoveryDelayTimer >= NORMAL_RECOVERY_DELAY) {
+                this.stamina = Math.min(MAX_STAMINA, this.stamina + RECOVERY_RATE_FAST * delta);
+            }
+            this.canSprint = true;
+        }
+    }
+
+    // Update UI
+    if (this.staminaBarElement) {
+        this.staminaBarElement.style.width = `${this.stamina}%`;
+        if (this.isExhausted) {
+            this.staminaBarElement.classList.add('exhausted');
+        } else {
+            this.staminaBarElement.classList.remove('exhausted');
+        }
+    }
   }
 
   update(delta) {
@@ -44,8 +115,8 @@ export class Player {
     // Aktualizacja wysokości kapsuły fizycznej (zamiast obj.position.y)
     this.collider.end.y = this.collider.start.y + this.currentHeight;
 
-    // Ustawienie prędkości (ze starej wersji)
-    if (keys.sprint && !keys.crouch) speed = 180.0;
+    // Ustawienie prędkości (ze starej wersji + logika sprintu)
+    if (keys.sprint && !keys.crouch && this.canSprint) speed = 180.0;
     if (keys.crouch) speed = 50.0;
 
     // --- 2. FIZYKA BAZOWA (Matematyka ruchu ze starej wersji) ---
@@ -77,11 +148,15 @@ export class Player {
     // Musimy to przeliczyć na wektor świata, aby przesunąć kapsułę.
 
     // Pobierz wektory kierunkowe kamery (zignoruj pochylenie Y dla ruchu pieszego)
-    const forwardVec = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+    const forwardVec = new THREE.Vector3(0, 0, -1).applyQuaternion(
+      this.camera.quaternion
+    );
     forwardVec.y = 0;
     forwardVec.normalize();
 
-    const rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+    const rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(
+      this.camera.quaternion
+    );
     rightVec.y = 0;
     rightVec.normalize();
 
@@ -100,36 +175,44 @@ export class Player {
     this.checkCollisions();
 
     // Kamera podąża za kapsułą (oczy gracza)
-    this.camera.position.copy(this.collider.end).sub(new THREE.Vector3(0, 0.1, 0));
+    this.camera.position
+      .copy(this.collider.end)
+      .sub(new THREE.Vector3(0, 0.1, 0));
 
     // Respawn (Mechanika z nowej wersji dla kapsuły)
     if (this.camera.position.y < -15) {
-        this.collider.start.set(0, 0.35, 0);
-        this.collider.end.set(0, 1.6, 0); // Reset do stania
-        this.velocity.set(0, 0, 0);
-        this.currentHeight = 1.6;
-        this.camera.position.set(0, 1.6, 0);
+      this.collider.start.set(0, 0.35, 0);
+      this.collider.end.set(0, 1.6, 0); // Reset do stania
+      this.velocity.set(0, 0, 0);
+      this.currentHeight = 1.6;
+      this.camera.position.set(0, 1.6, 0);
     }
+
+    // 5. Logika staminy
+    this.updateStamina(delta);
   }
 
   checkCollisions() {
     // Logika kolizji Octree (z nowej wersji - bez zmian)
     const result = worldOctree.capsuleIntersect(this.collider);
-    
+
     this.onFloor = false;
 
     if (result) {
-        this.onFloor = result.normal.y > 0;
+      this.onFloor = result.normal.y > 0;
 
-        if (!this.onFloor) {
-            // Wall Slide
-            this.velocity.addScaledVector(result.normal, -result.normal.dot(this.velocity));
-        } else {
-            // Lądowanie
-            if (this.velocity.y < 0) this.velocity.y = 0;
-        }
+      if (!this.onFloor) {
+        // Wall Slide
+        this.velocity.addScaledVector(
+          result.normal,
+          -result.normal.dot(this.velocity)
+        );
+      } else {
+        // Lądowanie
+        if (this.velocity.y < 0) this.velocity.y = 0;
+      }
 
-        this.collider.translate(result.normal.multiplyScalar(result.depth));
+      this.collider.translate(result.normal.multiplyScalar(result.depth));
     }
   }
 }
