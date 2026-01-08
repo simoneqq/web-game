@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { Capsule } from "three/addons/math/Capsule.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { keys } from "../core/Controls.js";
-import { worldOctree } from "../core/Physics.js";
+import { GRAVITY, worldOctree } from "../core/Physics.js";
 
 // Stamina Configuration
 const MAX_STAMINA = 100;
@@ -14,10 +14,10 @@ const NORMAL_RECOVERY_DELAY = 1.0; // Seconds to wait if not empty
 const UNLOCK_THRESHOLD = 50.0; // Re-enable sprint when stamina hits 50%
 
 export class Player {
-  constructor(camera, domElement) {
+  constructor(camera, domElement, projectileSystem) {
     this.camera = camera;
     this.controls = new PointerLockControls(camera, domElement);
-
+    this.projectileSystem = projectileSystem;
     // --- FIZYKA I PARAMETRY (ze starej wersji) ---
     this.velocity = new THREE.Vector3();
     this.direction = new THREE.Vector3();
@@ -44,6 +44,15 @@ export class Player {
 
     // UI STAMINY
     this.staminaBarElement = document.getElementById('stamina-bar');
+
+    document.addEventListener("mousedown", () => {
+        if (this.controls.isLocked && this.projectileSystem) {
+            // Wywołujemy strzał, przekazując kamerę (dla kierunku)
+            this.projectileSystem.shoot(this.camera);
+        } else {
+            this.controls.lock();
+        }
+    });
   }
 
   updateStamina(delta) {
@@ -124,7 +133,7 @@ export class Player {
     this.velocity.x -= this.velocity.x * 10.0 * delta;
     this.velocity.z -= this.velocity.z * 10.0 * delta;
     // Grawitacja
-    this.velocity.y -= 30.0 * delta;
+    this.velocity.y -= GRAVITY * delta;
 
     // Obliczanie kierunku z klawiszy
     this.direction.z = Number(keys.forward) - Number(keys.backward);

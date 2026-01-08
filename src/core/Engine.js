@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { initWorld } from "../scenes/MainScene.js";
 import { setupInput } from "./Controls.js";
 import { Player } from "../entities/Player.js";
-import { DevTools } from "./DevTools.js"; // Importujemy nową klasę
+import { DevTools } from "./DevTools.js";
+import { ProjectileSystem } from "./ProjectileSystem.js";
 
 export class Engine {
   constructor() {
@@ -10,7 +11,8 @@ export class Engine {
     this.camera = null;
     this.renderer = null;
     this.player = null;
-    this.devTools = null; // Zamiast devMode i stats
+    this.devTools = null;
+    this.projectileSystem = null;
   }
 
   init() {
@@ -25,17 +27,18 @@ export class Engine {
     setupInput();
     initWorld(this.scene);
 
-    this.player = new Player(this.camera, document.body);
+    this.projectileSystem = new ProjectileSystem(this.scene);
+
+    this.player = new Player(this.camera, document.body, this.projectileSystem);
     this.scene.add(this.player.controls.object);
 
-    // Inicjalizacja DevTools
     this.devTools = new DevTools(this.scene, this.player);
 
     this.setUpPointerLock();
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "F4") {
-        this.devTools.toggle(); // Wywołujemy metodę z nowej klasy
+        this.devTools.toggle();
       }
     });
 
@@ -58,7 +61,8 @@ export class Engine {
 
   update(delta) {
     this.player.update(delta);
-    this.devTools.update(); // Przekazujemy update do DevTools
+    this.projectileSystem.update(delta);
+    this.devTools.update();
   }
 
   render() {
