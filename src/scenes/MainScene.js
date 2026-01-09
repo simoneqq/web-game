@@ -3,7 +3,6 @@ import { worldData } from "./data/MainSceneData";
 import { worldOctree } from "../core/Physics";
 import { materials} from "./data/Materials"
 
-export const obstacleColliders = [];
 export const mapSize = 100;
 
 export function initWorld(scene) {
@@ -42,32 +41,4 @@ export function initWorld(scene) {
     scene.add(dirLight);
 
     worldOctree.fromGraphNode(group);
-
-
-    // Stare generowanie (można usunąć)
-    const loader = new THREE.TextureLoader();
-    const createCube = (x, z, y, texPath) => {
-        const tex = loader.load(texPath, undefined, undefined, () => console.warn("Brak: " + texPath));
-        const cube = new THREE.Mesh(
-            new THREE.BoxGeometry(1, 1, 1),
-            new THREE.MeshStandardMaterial({ map: tex })
-        );
-        cube.position.set(x, y, z);
-        scene.add(cube);
-        obstacleColliders.push(new THREE.Box3().setFromObject(cube));
-    };
-
-    createCube(3, 3, 0.5, "../textures/kirk1.jpg");
-    createCube(-3, -2, 0.5, "../textures/hociak.jpg");
-    createCube(-3, -2, 0.5, "../textures/hociak.jpg");
-    createCube(-3, -1, 0.5, "../textures/kirk2.jpg");
-    createCube(-3, 0, 0.5, "../textures/kirk2.jpg");
-    createCube(-2, -1, 0.5, "../textures/kirk2.jpg");
-    createCube(-1, -1, 0.5, "../textures/kirk2.jpg");
-
-    createCube(1, 1, 0.5, "../textures/kirk4.jpg");
-    createCube(1, 2, 0.5, "../textures/kirk4.jpg");
-    createCube(1, 3, 0.5, "../textures/kirk4.jpg");
-    createCube(1, 2, 1.5, "../textures/kirk4.jpg");
-    createCube(1, 2, 2.5, "../textures/hociak.jpg");
 }
