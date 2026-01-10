@@ -10,11 +10,25 @@ export function initWorld(scene) {
 
     const group = new THREE.Group();
 
+    const textureLoader = new THREE.TextureLoader();
+    const floorTexture = textureLoader.load('../../public/textures/grass.jpg');
+
+    floorTexture.wrapS = THREE.RepeatWrapping;
+    floorTexture.wrapT = THREE.RepeatWrapping;
+    floorTexture.repeat.set(50, 50); // Ile razy tekstura ma się powtórzyć na osi X i Y
+
     // 1. Generowanie podłogi
     const floorGeo = new THREE.BoxGeometry(worldData.floor.size, 1, worldData.floor.size);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x33aa33 });
+    
+    // Zmieniamy MeshStandardMaterial
+    const floorMat = new THREE.MeshStandardMaterial({ 
+        map: floorTexture, // Tutaj przypisujemy teksturę
+        roughness: 0.8,    // Dodaje realizmu (mniej błyszcząca)
+        metalness: 0.2     // Reakcja na światło
+    });
+
     const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.position.y = -0.5 + worldData.floor.y; //Centrowanie, żeby wierzch podłogi był na Y=0
+    floor.position.y = -0.5 + worldData.floor.y;
     floor.receiveShadow = true;
     group.add(floor);
 
