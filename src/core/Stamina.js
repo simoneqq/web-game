@@ -1,5 +1,5 @@
-const MAX_STAMINA = 100;
-const STAMINA_DEPLETION_RATE = 35; // Zużycie na sekundę
+const MAX_STAMINA = 120;
+const STAMINA_DEPLETION_RATE = 25; // Zużycie na sekundę
 const RECOVERY_RATE_BASE = 15;     // Regeneracja po wyczerpaniu
 const RECOVERY_RATE_FAST = 30;     // Regeneracja normalna
 const EXHAUSTION_COOLDOWN = 3.0;   // Czas kary po wyczerpaniu
@@ -16,6 +16,11 @@ export class StaminaSystem {
         this.recoveryDelayTimer = 0;
 
         this.barElement = document.getElementById('stamina-bar');
+
+        if (this.barElement) {
+            this.barElement.max = MAX_STAMINA;
+            this.barElement.value = MAX_STAMINA;
+        }
     }
     
     update(delta, isSprinting) {
@@ -67,13 +72,14 @@ export class StaminaSystem {
     }
 
     updateUI() {
-        if (this.barElement) {
-            this.barElement.style.width = `${this.value}%`;
-            if (this.isExhausted) {
-                this.barElement.classList.add('exhausted');
-            } else {
-                this.barElement.classList.remove('exhausted');
-            }
+    if (this.barElement) {
+        this.barElement.value = this.value; 
+
+        if (this.isExhausted) {
+            this.barElement.classList.add('exhausted');
+        } else {
+            this.barElement.classList.remove('exhausted');
         }
     }
+}
 }
