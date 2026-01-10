@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html lang="pl">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Gra FPS Three.js - Poprawiona</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <div id="instructions">
-        <h1>Kliknij, aby zacząć</h1>
-        <p>W, A, S, D - Poruszanie</p>
-        <p>Myszka - Rozglądanie</p>
-        <p>Spacja - Skok</p>
+      <h1>Kliknij, aby zacząć</h1>
+      <p>W, A, S, D - Poruszanie</p>
+      <p>Myszka - Rozglądanie</p>
+      <p>Spacja - Skok</p>
     </div>
 
     <div id="crosshair"></div>
 
-    <div id="stamina-container">
-        <div id="stamina-label">Stamina</div>
-        <div id="stamina-bar"></div>
+    <div id="slide-cooldown-container">
+      <progress id="slide-cooldown-bar" value="1" max="1"></progress>
+      <span class="slide-label">Slide</span>
     </div>
 
-    <script type="module" src="./src/main.js" ></script>
-</body>
+    <div id="stamina-container">
+      <div id="stamina-label">Stamina</div>
+      <progress id="stamina-bar" value="120" max="120"></progress>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
 </html>
