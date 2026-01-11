@@ -1,28 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Titan+One&display=swap');
+
+* {
+  font-family: "Titan One", sans-serif;
+  font-weight: 400;
+}
+
 body {
   margin: 0;
   overflow: hidden;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Instruction Overlay */
-#instructions {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: white;
-  background: rgba(0, 0, 0, 0.85);
-  padding: 40px;
-  border-radius: 20px;
-  cursor: pointer;
-  border: 2px solid #444;
-  z-index: 100;
-  transition: all 0.3s ease;
-}
-#instructions:hover {
-  border-color: #00ff88;
-  background: rgba(0, 0, 0, 0.9);
 }
 
 /* Crosshair UI */

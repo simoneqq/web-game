@@ -1,0 +1,79 @@
+#pause-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  color: white;
+  background: rgb(0, 0, 0, 0.3);
+
+  backdrop-filter: blur(8px);
+
+  cursor: pointer;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+.button-container {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 40px;
+  border-radius: 15px;
+}
+
+.button-container h1 {
+  font-size: 50px;
+  line-height: 10px;
+  text-align: center;
+}
+
+.custom-button {
+  width: 400px;
+  height: 80px;
+
+  border-width: 12px;
+  border-style: solid;
+
+  border-image-slice: 6 fill;
+  border-image-repeat: stretch;
+
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  box-sizing: border-box;
+  margin: 10px 0;
+}
+
+#resume-btn {
+  border-image-source: url("../ui/green_button_square_gradient.svg");
+}
+
+#options-btn {
+  border-image-source: url("../ui/blue_button_square_gradient.svg");
+}
+
+#leave-btn {
+  border-image-source: url("../ui/red_button_square_gradient.svg");
+}
+
+.btn-text {
+  color: white;
+  text-shadow: 1px 1px 2px black;
+  pointer-events: none;
+  user-select: none;
+  font-size: 40px;
+  margin-bottom: 5px;
+}
+
+.custom-button:hover {
+  transform: scale(1.1);
+  transition: all ease-out 0.15s;
+}

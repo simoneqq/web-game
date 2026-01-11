@@ -3,14 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <title>Gra FPS Three.js - Poprawiona</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="styles/style.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
   </head>
   <body>
-    <div id="instructions">
-      <h1>Kliknij, aby zacząć</h1>
-      <p>W, A, S, D - Poruszanie</p>
-      <p>Myszka - Rozglądanie</p>
-      <p>Spacja - Skok</p>
+    <div id="pause-screen">
+      <div>
+        <div class="button-container">
+          <h1>PAUSED</h1>
+          <div
+            id="resume-btn"
+            class="custom-button"
+          >
+            <span class="btn-text">RESUME</span>
+          </div>
+          <div
+            id="options-btn"
+            class="custom-button"
+          >
+            <span class="btn-text">OPTIONS</span>
+          </div>
+          <div
+            id="leave-btn"
+            class="custom-button"
+          >
+            <span class="btn-text">LEAVE</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="crosshair"></div>

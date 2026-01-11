@@ -26,7 +26,7 @@ export class Engine {
     document.body.appendChild(this.renderer.domElement);
 
     setupInput();
-    initWorld(this.scene);
+    initWorld(this.scene, this.loadingManager);
 
     this.projectileSystem = new ProjectileSystem(this.scene);
 
@@ -48,10 +48,10 @@ export class Engine {
   }
 
   setUpPointerLock() {
-    const instructions = document.getElementById("instructions");
-    instructions.addEventListener("click", () => this.player.controls.lock());
-    this.player.controls.addEventListener("lock", () => instructions.style.display = "none");
-    this.player.controls.addEventListener("unlock", () => instructions.style.display = "block");
+    const pause = document.getElementById("pause-screen");
+    pause.addEventListener("click", () => this.player.controls.lock());
+    this.player.controls.addEventListener("lock", () => pause.style.display = "none");
+    this.player.controls.addEventListener("unlock", () => pause.style.display = "flex");
   }
 
   onWindowResize() {

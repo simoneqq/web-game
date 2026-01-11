@@ -11,7 +11,7 @@ export function initWorld(scene) {
     const group = new THREE.Group();
 
     const textureLoader = new THREE.TextureLoader();
-    const floorTexture = textureLoader.load('../../public/textures/grass.jpg');
+    const floorTexture = textureLoader.load('/textures/grass.jpg');
 
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
