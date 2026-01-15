@@ -4,6 +4,7 @@ import { setupInput } from "./Controls.js";
 import { Player } from "../entities/Player.js";
 import { DevTools } from "./DevTools.js";
 import { ProjectileSystem } from "./ProjectileSystem.js";
+import { loadWorld } from "../scenes/ModelScene.js";
 
 export class Engine {
   constructor() {
@@ -26,7 +27,8 @@ export class Engine {
     document.body.appendChild(this.renderer.domElement);
 
     setupInput();
-    initWorld(this.scene, this.loadingManager);
+    // initWorld(this.scene, this.loadingManager);
+    loadWorld(this.scene);
 
     this.projectileSystem = new ProjectileSystem(this.scene);
 
