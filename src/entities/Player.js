@@ -76,11 +76,10 @@ export class Player {
     this.staminaSystem.update(delta, isSprinting);
     this.slideSystem.update(delta);
 
-    // START SLAJDU:
     if (
-      isTryingToSprint &&
-      keys.crouch &&
+      keys.slide &&
       !this.slideSystem.isActive &&
+      !this.slideSystem.isOnCooldown &&
       this.staminaSystem.canSprint
     ) {
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(
@@ -88,23 +87,6 @@ export class Player {
       );
       forward.y = 0;
       forward.normalize();
-      this.slideSystem.start(forward, 15.0);
-    }
-
-    // COOLDOWN SLAJDU:
-    if (
-      isTryingToSprint &&
-      keys.crouch &&
-      !this.slideSystem.isActive &&
-      !this.slideSystem.isOnCooldown && // NOWY WARUNEK
-      this.staminaSystem.canSprint
-    ) {
-      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(
-        this.camera.quaternion
-      );
-      forward.y = 0;
-      forward.normalize();
-      // Jak ktoś ogarnie co te 15 tu robi to niech da znać, bo za chuja nie wiem 
       this.slideSystem.start(forward, 15.0);
     }
 

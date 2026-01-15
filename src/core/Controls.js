@@ -5,7 +5,8 @@ export const keys = {
     right: false,
     jump: false,
     sprint: false,
-    crouch: false
+    crouch: false,
+    slide: false
 };
 
 export function setupInput() {
@@ -17,6 +18,7 @@ export function setupInput() {
         if (e.code === "Space") keys.jump = true;
         if (e.code === "ShiftLeft" || e.code === "ShiftRight") keys.sprint = true; // shift do sprintu 26/12/25
         if (e.code === "ControlLeft" || e.code === "ControlRight") keys.crouch = true; // ctrl do kucania
+        if (e.code === "KeyC") keys.slide = true;
     };
     const onKeyUp = (e) => {
         if (e.code === "KeyW") keys.forward = false;
@@ -26,6 +28,7 @@ export function setupInput() {
         if (e.code === "Space") keys.jump = false;
         if (e.code === "ShiftLeft" || e.code === "ShiftRight") keys.sprint = false;
         if (e.code === "ControlLeft" || e.code === "ControlRight") keys.crouch = false;
+        if (e.code === "KeyC") keys.slide = false;
     };
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
