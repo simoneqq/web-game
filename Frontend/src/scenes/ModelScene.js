@@ -1,6 +1,6 @@
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OctreeHelper } from "three/addons/helpers/OctreeHelper.js";
-import { worldOctree } from "../core/Physics";
+import { worldOctree } from "../core/Physics.js";
 import * as THREE from "three";
 
 export function loadWorld(scene) {

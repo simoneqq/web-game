@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <title>Gra FPS Three.js - Poprawiona</title>
-    <link rel="stylesheet" href="styles/style.css" />
-    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="/public/styles/style.css" />
+    <link rel="stylesheet" href="/public/styles/ui.css" />
   </head>
   <body>
     <div id="pause-screen">
@@ -45,6 +45,20 @@
       <progress id="stamina-bar" value="120" max="120"></progress>
     </div>
 
-    <script type="module" src="./src/main.js"></script>
+    <!-- Socket.io - musi być przed main.js -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Import map dla Three.js i innych bibliotek z node_modules -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/node_modules/three/build/three.module.js",
+          "three/addons/": "/node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+    
+    <!-- Twój główny skrypt gry -->
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>

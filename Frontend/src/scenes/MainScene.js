@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { worldData } from "./data/MainSceneData";
-import { worldOctree } from "../core/Physics";
-import { materials} from "./data/Materials"
+import { worldData } from "./data/MainSceneData.js";
+import { worldOctree } from "../core/Physics.js";
+import { materials} from "./data/Materials.js";
 
 export const mapSize = 100;
 
