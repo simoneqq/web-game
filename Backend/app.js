@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const http = require("http").Server(app);
+const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 const path = require("path");
 
@@ -12,60 +12,40 @@ app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname, "../Frontend/index.html"));
 });
 
-io.sockets.on("connection", function (socket) {
-  socket.userData = { x: 0, y: 0, z: 0, heading: 0 }; //Default values;
+const players = {};
 
+io.on("connection", function (socket) {
   console.log(`${socket.id} connected`);
-  socket.emit("setId", { id: socket.id });
 
-  socket.on("disconnect", function () {
-    socket.broadcast.emit("deletePlayer", { id: socket.id });
+	players[socket.id] = {
+		id: socket.id,
+		x: 0,
+		y: 10,
+		z: 0,
+		rotation: 0,
+	};
+
+  socket.emit("currentPlayers", players);
+
+	socket.broadcast.emit("newPlayer", players[socket.id]);
+
+  socket.on("playerMove", function (movementData) {
+		if (players[socket.id]) {
+			players[socket.id].x = movementData.x;
+			players[socket.id].y = movementData.y;
+			players[socket.id].z = movementData.z;
+			players[socket.id].rotation = movementData.rotation;
+
+			socket.broadcast.emit("updatePlayer", players[socket.id]);
+		}
   });
 
-  socket.on("init", function (data) {
-    console.log(`socket.init ${data.model}`);
-    socket.userData.model = data.model;
-    socket.userData.colour = data.colour;
-    socket.userData.x = data.x;
-    socket.userData.y = data.y;
-    socket.userData.z = data.z;
-    socket.userData.heading = data.h;
-    ((socket.userData.pb = data.pb), (socket.userData.action = "Idle"));
-  });
-
-  socket.on("update", function (data) {
-    socket.userData.x = data.x;
-    socket.userData.y = data.y;
-    socket.userData.z = data.z;
-    socket.userData.heading = data.h;
-    ((socket.userData.pb = data.pb), (socket.userData.action = data.action));
-  });
+	socket.on("disconnect", function () {
+		console.log(`${socket.id} disconnected`);
+		socket.broadcast.emit("deletePlayer", { id: socket.id });
+	});
 });
 
 http.listen(2002, function () {
-  console.log("listening on *:2002");
+	console.log("listening on *:2002");
 });
-
-setInterval(function () {
-  const nsp = io.of("/");
-  let pack = [];
-
-  for (let id in io.sockets.sockets) {
-    const socket = nsp.connected[id];
-    //Only push sockets that have been initialised
-    if (socket.userData.model !== undefined) {
-      pack.push({
-        id: socket.id,
-        model: socket.userData.model,
-        colour: socket.userData.colour,
-        x: socket.userData.x,
-        y: socket.userData.y,
-        z: socket.userData.z,
-        heading: socket.userData.heading,
-        pb: socket.userData.pb,
-        action: socket.userData.action,
-      });
-    }
-  }
-  if (pack.length > 0) io.emit("remoteData", pack);
-}, 40);

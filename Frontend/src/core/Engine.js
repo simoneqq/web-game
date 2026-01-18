@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { initWorld } from "../scenes/MainScene.js";
 import { setupInput } from "./Controls.js";
 import { Player } from "../entities/Player.js";
+import { RemotePlayer } from "../entities/RemotePlayers.js";
 import { DevTools } from "./DevTools.js";
 import { ProjectileSystem } from "./ProjectileSystem.js";
 import { loadWorld } from "../scenes/ModelScene.js";
@@ -14,6 +15,9 @@ export class Engine {
     this.player = null;
     this.devTools = null;
     this.projectileSystem = null;
+
+    this.socket = null;
+    this.remotePlayers = {};
   }
 
   init() {
@@ -29,6 +33,8 @@ export class Engine {
     setupInput();
     // initWorld(this.scene, this.loadingManager);
     loadWorld(this.scene);
+
+    this.initSocket();
 
     this.projectileSystem = new ProjectileSystem(this.scene);
 
@@ -49,6 +55,45 @@ export class Engine {
     window.addEventListener("resize", this.onWindowResize);
   }
 
+  initSocket() {
+    // Łączymy się z serwerem (zakładając, że biblioteka socket.io.js jest załadowana w HTML)
+    this.socket = io();
+
+    // 1. Gdy wejdziemy, serwer wysyła listę obecnych graczy
+    this.socket.on("currentPlayers", (players) => {
+      Object.keys(players).forEach((id) => {
+        if (id !== this.socket.id) {
+          this.addRemotePlayer(players[id]);
+        }
+      });
+    });
+
+    // 2. Gdy ktoś nowy wejdzie
+    this.socket.on("newPlayer", (playerData) => {
+      this.addRemotePlayer(playerData);
+    });
+
+    // 3. Gdy ktoś się ruszy
+    this.socket.on("updatePlayer", (playerData) => {
+      if (this.remotePlayers[playerData.id]) {
+        this.remotePlayers[playerData.id].update(playerData);
+      }
+    });
+
+    // 4. Gdy ktoś wyjdzie
+    this.socket.on("deletePlayer", (id) => {
+      if (this.remotePlayers[id]) {
+        this.remotePlayers[id].removeFromScene(this.scene);
+        delete this.remotePlayers[id];
+      }
+    });
+  }
+
+  addRemotePlayer(data) {
+    // Tworzymy obiekt RemotePlayer i zapisujemy w mapie
+    this.remotePlayers[data.id] = new RemotePlayer(this.scene, data);
+  }
+
   setUpPointerLock() {
     const pause = document.getElementById("pause-screen");
     pause.addEventListener("click", () => this.player.controls.lock());
@@ -66,6 +111,22 @@ export class Engine {
     this.player.update(delta);
     this.projectileSystem.update(delta);
     this.devTools.update();
+
+    if (this.socket && this.player) {
+      // Pobieramy pozycję z collidera (bo to fizyczne ciało gracza)
+      // collider.start to dół kapsuły (nogi), dodajemy trochę żeby środek był ok
+      const pos = this.player.collider.start; 
+      
+      // Pobieramy obrót z kamery
+      const rot = this.player.camera.rotation.y;
+
+      this.socket.emit("playerMove", {
+        x: pos.x,
+        y: pos.y, 
+        z: pos.z,
+        rotation: rot
+      });
+    }
   }
 
   render() {
