@@ -1,32 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
     <title>Gra FPS Three.js - Poprawiona</title>
     <link rel="stylesheet" href="/public/styles/style.css" />
     <link rel="stylesheet" href="/public/styles/ui.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+          "three/examples/jsm/libs/stats.module.js": "https://unpkg.com/three@0.160.0/examples/jsm/libs/stats.module.js"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="pause-screen">
       <div>
         <div class="button-container">
           <h1>PAUSED</h1>
-          <div
-            id="resume-btn"
-            class="custom-button"
-          >
+          <div id="resume-btn" class="custom-button">
             <span class="btn-text">RESUME</span>
           </div>
-          <div
-            id="options-btn"
-            class="custom-button"
-          >
+          <div id="options-btn" class="custom-button">
             <span class="btn-text">OPTIONS</span>
           </div>
-          <div
-            id="leave-btn"
-            class="custom-button"
-          >
+          <div id="leave-btn" class="custom-button">
             <span class="btn-text">LEAVE</span>
           </div>
         </div>
@@ -47,17 +47,7 @@
 
     <!-- Socket.io - musi być przed main.js -->
     <script src="/socket.io/socket.io.js"></script>
-    
-    <!-- Import map dla Three.js i innych bibliotek z node_modules -->
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "/node_modules/three/build/three.module.js",
-          "three/addons/": "/node_modules/three/examples/jsm/"
-        }
-      }
-    </script>
-    
+
     <!-- Twój główny skrypt gry -->
     <script type="module" src="/src/main.js"></script>
   </body>
