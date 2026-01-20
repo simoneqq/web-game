@@ -57,8 +57,8 @@ export class DevTools {
     if (this.stats) this.stats.update();
 
     // Aktualizacja pozycji strzałki przed oczami gracza
-    if (this.northArrow) {
-      const playerPos = this.player.controls.object.position;
+    if (this.northArrow && this.player && this.player.camera) {
+      const playerPos = this.player.camera.position;
       const viewDir = new THREE.Vector3();
       this.player.controls.getDirection(viewDir);
 

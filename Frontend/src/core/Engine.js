@@ -131,13 +131,14 @@ export class Engine {
   
   update(delta) {
     if (this.isGameActive) {
+      this.devTools.update();
       this.projectileSystem.update(delta);
       
       if (this.player.controls.isLocked) {
         this.player.update(delta);
         
         if (this.socket) {
-          pos = this.player.collider.start.x;
+          const pos = this.player.collider.start;
 
           this.socket.emit("playerMove", {
             x: pos.x,
