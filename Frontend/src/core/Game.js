@@ -9,6 +9,11 @@ export class Game {
 
   start() {
     this.engine.init();
+    
+    document.getElementById("start-game-btn").addEventListener("click", () => {
+      this.engine.startFromMenu();
+    });
+
     requestAnimationFrame(this.animate);
   }
 
@@ -16,14 +21,17 @@ export class Game {
     requestAnimationFrame(this.animate);
 
     const time = performance.now();
-    const delta = (time - this.prevTime) / 1000;
+
+    if (!this.engine.isGameActive) {
+      this.prevTime = time;
+      this.engine.render();
+      return;
+    }
+
+    const delta = Math.min((time - this.prevTime) / 1000, 0.1);
     this.prevTime = time;
 
     this.engine.update(delta);
     this.engine.render();
-    
-    // if (this.engine.devMode && this.engine.stats) {
-    //   this.engine.stats.update();
-    // } zakomentowane bo nie potrzebne CHYBA (działa bez)
   }
 }

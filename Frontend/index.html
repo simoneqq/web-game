@@ -16,35 +16,42 @@
     </script>
   </head>
   <body>
-    <div id="pause-screen">
-      <div>
-        <div class="button-container">
-          <h1>PAUSED</h1>
-          <div id="resume-btn" class="custom-button">
-            <span class="btn-text">RESUME</span>
-          </div>
-          <div id="options-btn" class="custom-button">
-            <span class="btn-text">OPTIONS</span>
-          </div>
-          <div id="leave-btn" class="custom-button">
-            <span class="btn-text">LEAVE</span>
+    <div id="main-menu">
+      <h1>MENU</h1>
+      <p>tu mozna dac jakies wybieranie kolorow itp</p>
+      <button id="start-game-btn" class="start-btn">ZAGRAJ</button>
+    </div>
+
+    <div id="ui-layer">
+      <div id="pause-screen">
+        <div>
+          <div class="button-container">
+            <h1>PAUSED</h1>
+            <div id="resume-btn" class="custom-button">
+              <span class="btn-text">RESUME</span>
+            </div>
+            <div id="options-btn" class="custom-button">
+              <span class="btn-text">OPTIONS</span>
+            </div>
+            <div id="leave-btn" class="custom-button">
+              <span class="btn-text">LEAVE</span>
+            </div>
           </div>
         </div>
       </div>
+
+      <div id="crosshair"></div>
+
+      <div id="slide-cooldown-container">
+        <progress id="slide-cooldown-bar" value="1" max="1"></progress>
+        <span class="slide-label">Slide</span>
+      </div>
+
+      <div id="stamina-container">
+        <div id="stamina-label">Stamina</div>
+        <progress id="stamina-bar" value="120" max="120"></progress>
+      </div>
     </div>
-
-    <div id="crosshair"></div>
-
-    <div id="slide-cooldown-container">
-      <progress id="slide-cooldown-bar" value="1" max="1"></progress>
-      <span class="slide-label">Slide</span>
-    </div>
-
-    <div id="stamina-container">
-      <div id="stamina-label">Stamina</div>
-      <progress id="stamina-bar" value="120" max="120"></progress>
-    </div>
-
     <!-- Socket.io - musi być przed main.js -->
     <script src="/socket.io/socket.io.js"></script>
 

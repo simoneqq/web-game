@@ -38,8 +38,6 @@ export class Player {
     document.addEventListener("mousedown", () => {
       if (this.controls.isLocked && this.projectileSystem) {
         this.projectileSystem.shoot(this.camera);
-      } else {
-        this.controls.lock();
       }
     });
   }
