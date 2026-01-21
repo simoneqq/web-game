@@ -7,7 +7,8 @@ import { StaminaSystem } from "../core/Stamina.js";
 import { SlideSystem } from "../core/Slide.js";
 
 export class Player {
-  constructor(camera, domElement, projectileSystem) {
+  constructor(camera, domElement, projectileSystem, engine) {
+    this.engine = engine;
     this.camera = camera;
     this.baseFov = camera.fov;
     this.controls = new PointerLockControls(camera, domElement);
@@ -27,7 +28,7 @@ export class Player {
     this.collider = new Capsule(
       new THREE.Vector3(0, 0.35, 0),
       new THREE.Vector3(0, 1.6, 0),
-      0.35
+      0.35,
     );
 
     // --- SYSTEMY ---
@@ -37,6 +38,24 @@ export class Player {
     // --- STRZELANIE ---
     document.addEventListener("mousedown", () => {
       if (this.controls.isLocked && this.projectileSystem) {
+        if (this.engine.socket) {
+          const direction = new THREE.Vector3();
+          this.camera.getWorldDirection(direction);
+
+          this.engine.socket.emit("playerShoot", {
+            pos: {
+              x: this.camera.position.x,
+              y: this.camera.position.y,
+              z: this.camera.position.z,
+            },
+            dir: {
+              x: direction.x,
+              y: direction.y,
+              z: direction.z,
+            },
+            color: 0xff0000,
+          });
+        }
         this.projectileSystem.shoot(this.camera);
       }
     });
@@ -46,7 +65,7 @@ export class Player {
     if (!this.controls.isLocked) return;
 
     // --- 1. WYSOKOŚĆ I KUCANIE ---
-    
+
     let targetHeight = keys.crouch ? this.crouchHeight : this.standingHeight;
     if (this.slideSystem.isActive) {
       targetHeight = this.slideHeight;
@@ -55,7 +74,7 @@ export class Player {
     this.currentHeight = THREE.MathUtils.lerp(
       this.currentHeight,
       targetHeight,
-      delta * 12
+      delta * 12,
     );
 
     this.camera.fov = this.baseFov + this.slideSystem.currentFovExtra;
@@ -69,7 +88,8 @@ export class Player {
     const isTryingToSprint = keys.sprint && isMoving && this.onFloor;
 
     // Bieg (tylko gdy NIE kuca i NIE slajduje) - do staminy i prędkości
-    const isSprinting = isTryingToSprint && !keys.crouch && !this.slideSystem.isActive;
+    const isSprinting =
+      isTryingToSprint && !keys.crouch && !this.slideSystem.isActive;
 
     this.staminaSystem.update(delta, isSprinting);
     this.slideSystem.update(delta);
@@ -81,7 +101,7 @@ export class Player {
       this.staminaSystem.canSprint
     ) {
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(
-        this.camera.quaternion
+        this.camera.quaternion,
       );
       forward.y = 0;
       forward.normalize();
@@ -130,13 +150,13 @@ export class Player {
     } else {
       // Chodzenie
       const forwardVec = new THREE.Vector3(0, 0, -1).applyQuaternion(
-        this.camera.quaternion
+        this.camera.quaternion,
       );
       forwardVec.y = 0;
       forwardVec.normalize();
 
       const rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(
-        this.camera.quaternion
+        this.camera.quaternion,
       );
       rightVec.y = 0;
       rightVec.normalize();
@@ -153,7 +173,9 @@ export class Player {
     // --- 6. KOLIZJE I KAMERA ---
     this.checkCollisions();
 
-    this.camera.position.copy(this.collider.end).sub(new THREE.Vector3(0, 0.1, 0));
+    this.camera.position
+      .copy(this.collider.end)
+      .sub(new THREE.Vector3(0, 0.1, 0));
 
     if (this.camera.position.y < -15) {
       this.collider.start.set(0, 0.35, 0);
@@ -173,7 +195,7 @@ export class Player {
       if (!this.onFloor) {
         this.velocity.addScaledVector(
           result.normal,
-          -result.normal.dot(this.velocity)
+          -result.normal.dot(this.velocity),
         );
       } else {
         if (this.velocity.y < 0) this.velocity.y = 0;

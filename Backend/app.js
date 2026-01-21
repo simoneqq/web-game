@@ -40,9 +40,16 @@ io.on("connection", function (socket) {
 		}
   });
 
+	socket.on("playerShoot", function (shootData) {
+		socket.broadcast.emit("remoteShoot", shootData);
+	});
+
 	socket.on("disconnect", function () {
 		console.log(`${socket.id} disconnected`);
-		socket.broadcast.emit("deletePlayer", { id: socket.id });
+		if (players[socket.id]) {
+			delete players[socket.id];
+		}
+		socket.broadcast.emit("deletePlayer", socket.id);
 	});
 });
 

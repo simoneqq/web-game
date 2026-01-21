@@ -41,7 +41,7 @@ export class Engine {
     loadWorld(this.scene);
 
     this.projectileSystem = new ProjectileSystem(this.scene);
-    this.player = new Player(this.camera, document.body, this.projectileSystem);
+    this.player = new Player(this.camera, document.body, this.projectileSystem, this);
     this.scene.add(this.player.controls.getObject());
     this.devTools = new DevTools(this.scene, this.player);
 
@@ -94,7 +94,7 @@ export class Engine {
   
   initSocket() {
     this.socket = io();
-    // 1. Gdy wejdziemy, serwer wysyła listę obecnych graczy
+    // Gdy wejdziemy, serwer wysyła listę obecnych graczy
     this.socket.on("currentPlayers", (players) => {
       Object.keys(players).forEach((id) => {
         if (id !== this.socket.id) {
@@ -103,19 +103,24 @@ export class Engine {
       });
     });
   
-    // 2. Gdy ktoś nowy wejdzie
+    // Gdy ktoś nowy wejdzie
     this.socket.on("newPlayer", (playerData) => {
       this.addRemotePlayer(playerData);
     });
   
-    // 3. Gdy ktoś się ruszy
+    // Gdy ktoś się ruszy
     this.socket.on("updatePlayer", (playerData) => {
       if (this.remotePlayers[playerData.id]) {
         this.remotePlayers[playerData.id].update(playerData);
       }
     });
+
+    // Gdy ktoś strzeli
+    this.socket.on("remoteShoot", (shootData) => {
+      this.projectileSystem.spawnRemoteProjectile(shootData);
+    });
   
-    // 4. Gdy ktoś wyjdzie
+    // Gdy ktoś wyjdzie
     this.socket.on("deletePlayer", (id) => {
       if (this.remotePlayers[id]) {
         this.remotePlayers[id].removeFromScene(this.scene);

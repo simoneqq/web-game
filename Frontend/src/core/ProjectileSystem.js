@@ -69,6 +69,24 @@ export class ProjectileSystem {
     sphere.velocity.copy(direction).multiplyScalar(SPEED);
   }
 
+  spawnRemoteProjectile(data) {
+    const sphere = this.spheres.find((s) => !s.active);
+    if (!sphere) return;
+
+    sphere.active = true;
+    sphere.mesh.visible = true;
+
+    if (data.color) {
+      sphere.color.set(data.color);
+      sphere.mesh.material.color.copy(sphere.color);
+    }
+
+    sphere.collider.center.set(data.pos.x, data.pos.y, data.pos.z);
+    sphere.mesh.position.copy(sphere.collider.center);
+
+    sphere.velocity.set(data.dir.x, data.dir.y, data.dir.z).multiplyScalar(SPEED);
+  }
+
   createSplat(position, normal, color, hitObject) {
     // 1. Orientacja plamy (musi "patrzeć" w stronę normalnej ściany)
     const orientation = new THREE.Euler();
