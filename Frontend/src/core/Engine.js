@@ -41,7 +41,7 @@ export class Engine {
     setupInput();
     loadWorld(this.scene);
 
-    this.projectileSystem = new ProjectileSystem(this.scene);
+    this.projectileSystem = new ProjectileSystem(this.scene, this);
     this.player = new Player(this.camera, document.body, this.projectileSystem, this);
     this.scene.add(this.player.controls.getObject());
     this.devTools = new DevTools(this.scene, this.player);

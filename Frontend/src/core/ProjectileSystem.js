@@ -7,12 +7,12 @@ const NUM_SPHERES = 30; // Maksymalna liczba pocisków i plam, żeby uniknąć l
 const SPEED = 60; // Prędkość lotu pocisku
 
 export class ProjectileSystem {
-  constructor(scene) {
+  constructor(scene, engine) {
     this.scene = scene;
     this.spheres = [];
     this.decals = []; // Tablica na plamy
     this.particles = []; // Tablica na cząsteczki wybuchu
-    this.engine = null; // Referencja do Engine (zostanie ustawiona)
+    this.engine = engine;
 
     const loader = new THREE.TextureLoader();
     this.splatTexture = loader.load("../textures/splat.png");
