@@ -20,6 +20,7 @@ export class Engine {
     this.remotePlayers = {};
 
     this.isGameActive = false;
+    this.playerColor = "#ff0000"; // Domyślny kolor
   }
 
   init() {
@@ -65,6 +66,7 @@ export class Engine {
     const mainMenu = document.getElementById("main-menu");
     const uiLayer = document.getElementById("ui-layer");
     const pauseScreen = document.getElementById("pause-screen");
+    const playerBorder = document.getElementById("player-border");
 
     this.player.controls.addEventListener('lock', () => {
       // Przy aktywacji locka:
@@ -72,6 +74,17 @@ export class Engine {
         this.isGameActive = true;
         mainMenu.style.display = "none";
         uiLayer.style.display = "block";
+        
+        // Pobierz wybrany kolor z localStorage
+        const savedColor = localStorage.getItem('playerColor');
+        if (savedColor) {
+          this.playerColor = savedColor;
+        }
+        
+        // Ustaw kolor obramówki
+        playerBorder.style.setProperty('--player-color', this.playerColor);
+        playerBorder.classList.add('active');
+        
         if (!this.socket) this.initSocket();
       }
       pauseScreen.style.display = "none";
@@ -94,6 +107,12 @@ export class Engine {
   
   initSocket() {
     this.socket = io();
+    
+    // Gdy połączenie się ustanowi, wyślij swój kolor
+    this.socket.on("connect", () => {
+      this.socket.emit("changeColor", { color: this.playerColor });
+    });
+    
     // Gdy wejdziemy, serwer wysyła listę obecnych graczy
     this.socket.on("currentPlayers", (players) => {
       Object.keys(players).forEach((id) => {
@@ -108,7 +127,7 @@ export class Engine {
       this.addRemotePlayer(playerData);
     });
   
-    // Gdy ktoś się ruszy
+    // Gdy ktoś się ruszy lub zmieni kolor
     this.socket.on("updatePlayer", (playerData) => {
       if (this.remotePlayers[playerData.id]) {
         this.remotePlayers[playerData.id].update(playerData);

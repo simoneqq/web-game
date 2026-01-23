@@ -19,6 +19,7 @@ io.on("connection", function (socket) {
 
 	players[socket.id] = {
 		id: socket.id,
+		color: "#ff0000", // default color
 		x: 0,
 		y: 10,
 		z: 0,
@@ -42,6 +43,13 @@ io.on("connection", function (socket) {
 
 	socket.on("playerShoot", function (shootData) {
 		socket.broadcast.emit("remoteShoot", shootData);
+	});
+
+	socket.on("changeColor", function (colorData) {
+		if (players[socket.id]) {
+			players[socket.id].color = colorData.color;
+			socket.broadcast.emit("updatePlayer", players[socket.id]);
+		}
 	});
 
 	socket.on("disconnect", function () {

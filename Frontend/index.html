@@ -18,11 +18,38 @@
   <body>
     <div id="main-menu">
       <h1>MENU</h1>
+
+      <form onsubmit="return updateColor(event)">
+        <p>CHOOSE YOUR COLOR:&nbsp;&nbsp;<input type="color" name="playerColorPicker" id="playerColorPicker" value="#ff0000"/>&nbsp;&nbsp;<button type="submit">Wybierz</button></p>
+      </form>
+      <script>
+        function updateColor(event) {
+          event.preventDefault();
+          const colorInput = document.getElementById("playerColorPicker");
+          const selectedColor = colorInput.value;
+          
+          // Zapisz kolor w localStorage do użycia przy starcie gry
+          localStorage.setItem('playerColor', selectedColor);
+          
+          return false;
+        }
+      </script>
+      
       <p>tu mozna dac jakies wybieranie kolorow itp</p>
       <button id="start-game-btn" class="start-btn">ZAGRAJ</button>
     </div>
 
     <div id="ui-layer">
+      <!-- OBRAMÓWKA GRACZA -->
+      <div id="player-border">
+        <div class="border-left"></div>
+        <div class="border-right"></div>
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+      </div>
+
       <div id="pause-screen">
         <div>
           <div class="button-container">
