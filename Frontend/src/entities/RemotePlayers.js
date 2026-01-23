@@ -3,6 +3,7 @@ import * as THREE from "three";
 export class RemotePlayer {
   constructor(scene, initialData) {
     this.id = initialData.id;
+    this.nick = initialData.nick || "Player";
     
     // Tworzymy model reprezentujący innego gracza (Kapsuła jak collider)
     const geometry = new THREE.CapsuleGeometry(0.35, 1.25, 4, 8);
@@ -28,6 +29,11 @@ export class RemotePlayer {
     // Aktualizacja koloru jeśli się zmienił
     if (data.color) {
       this.mesh.material.color.set(data.color);
+    }
+
+    // Aktualizacja nicku jeśli się zmienił
+    if (data.nick) {
+      this.nick = data.nick;
     }
   }
 
