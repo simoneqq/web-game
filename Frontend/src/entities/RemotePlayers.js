@@ -5,8 +5,10 @@ export class RemotePlayer {
     this.id = initialData.id;
     
     // Tworzymy model reprezentujący innego gracza (Kapsuła jak collider)
-    const geometry = new THREE.CapsuleGeometry(0.35, 1.25, 4, 8); // Promień 0.35, wysokość cylindra ~1.25
-    const material = new THREE.MeshStandardMaterial({ color: 0xff0000 }); // Czerwony gracz
+    const geometry = new THREE.CapsuleGeometry(0.35, 1.25, 4, 8);
+    const material = new THREE.MeshStandardMaterial({ 
+      color: initialData.color || "#ff0000" // jak bebok nie da koloru to jest czerwony
+    });
     this.mesh = new THREE.Mesh(geometry, material);
     
     // Ustawienie początkowej pozycji
@@ -18,12 +20,15 @@ export class RemotePlayer {
 
   update(data) {
     // Interpolacja pozycji (płynniejsze przesuwanie)
-    // Jeśli chcesz super prosto, użyj: this.mesh.position.set(data.x, data.y, data.z);
-    
     this.mesh.position.lerp(new THREE.Vector3(data.x, data.y, data.z), 0.3);
     
     // Obrót (tylko w osi Y - lewo/prawo)
     this.mesh.rotation.y = data.rotation;
+    
+    // Aktualizacja koloru jeśli się zmienił
+    if (data.color) {
+      this.mesh.material.color.set(data.color);
+    }
   }
 
   removeFromScene(scene) {

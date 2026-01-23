@@ -105,3 +105,100 @@
   cursor: pointer;
   border-radius: 5px;
 }
+
+/* Obramówka ekranu gracza */
+#player-border {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#player-border.active {
+  opacity: 1;
+}
+
+/* Górna obramówka */
+#player-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to bottom, var(--player-color, #ff0000), transparent);
+  box-shadow: 0 0 20px var(--player-color, #ff0000);
+}
+
+/* Dolna obramówka */
+#player-border::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to top, var(--player-color, #ff0000), transparent);
+  box-shadow: 0 0 20px var(--player-color, #ff0000);
+}
+
+/* Lewa obramówka */
+.border-left {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to right, var(--player-color, #ff0000), transparent);
+  box-shadow: 0 0 20px var(--player-color, #ff0000);
+}
+
+/* Prawa obramówka */
+.border-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to left, var(--player-color, #ff0000), transparent);
+  box-shadow: 0 0 20px var(--player-color, #ff0000);
+}
+
+/* Narożniki dla dodatkowego efektu */
+.corner {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-style: solid;
+  border-color: var(--player-color, #ff0000);
+  box-shadow: 0 0 15px var(--player-color, #ff0000);
+}
+
+.corner-tl {
+  top: 10px;
+  left: 10px;
+  border-width: 3px 0 0 3px;
+}
+
+.corner-tr {
+  top: 10px;
+  right: 10px;
+  border-width: 3px 3px 0 0;
+}
+
+.corner-bl {
+  bottom: 10px;
+  left: 10px;
+  border-width: 0 0 3px 3px;
+}
+
+.corner-br {
+  bottom: 10px;
+  right: 10px;
+  border-width: 0 3px 3px 0;
+}

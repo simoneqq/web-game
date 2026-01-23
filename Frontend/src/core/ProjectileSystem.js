@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
 import { worldOctree } from "./Physics.js";
 import { GRAVITY } from "./Physics.js";
-import { PLAYER_COLOR } from "../utils/Consts.js";
 
 const NUM_SPHERES = 30; // Maksymalna liczba pocisków i plam, żeby uniknąć lagów
 const SPEED = 60; // Prędkość lotu pocisku
@@ -13,6 +12,7 @@ export class ProjectileSystem {
     this.spheres = [];
     this.decals = []; // Tablica na plamy
     this.particles = []; // Tablica na cząsteczki wybuchu
+    this.engine = null; // Referencja do Engine (zostanie ustawiona)
 
     const loader = new THREE.TextureLoader();
     this.splatTexture = loader.load("../textures/splat.png");
@@ -55,8 +55,10 @@ export class ProjectileSystem {
     sphere.active = true;
     sphere.mesh.visible = true;
 
-    sphere.mesh.material.color.copy(PLAYER_COLOR);
-    sphere.color.copy(PLAYER_COLOR);
+    // Pobierz kolor gracza z engine
+    const playerColor = this.engine ? this.engine.playerColor : "#ff0000";
+    sphere.mesh.material.color.set(playerColor);
+    sphere.color.set(playerColor);
 
     // Pozycja startowa
     const direction = new THREE.Vector3();
@@ -116,7 +118,7 @@ export class ProjectileSystem {
     const m = new THREE.Mesh(geometry, material);
     this.scene.add(m);
 
-    // Usuwanie staruch plam
+    // Usuwanie starych plam
     this.decals.push(m);
     if (this.decals.length > 50) {
       const old = this.decals.shift();
@@ -126,11 +128,11 @@ export class ProjectileSystem {
     }
   }
 
-  createExplosion(position, normal) {
+  createExplosion(position, normal, color) {
     // Prosty efekt cząsteczkowy - 8 małych kostek
     for (let i = 0; i < 8; i++) {
       const geo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
-      const mat = new THREE.MeshBasicMaterial({ color: PLAYER_COLOR });
+      const mat = new THREE.MeshBasicMaterial({ color: color });
       const p = new THREE.Mesh(geo, mat);
 
       p.position.copy(position);
@@ -151,7 +153,7 @@ export class ProjectileSystem {
   }
 
   update(dt) {
-    const subSteps = 5; // ilość sprawdzania kolizji na jedną klatkę (przy mniejszych liczbach pociski czasami przelatują przez obiekty)
+    const subSteps = 5; // ilość sprawdzania kolizji na jedną klatkę
     const subDt = dt / subSteps;
 
     for (const sphere of this.spheres) {
@@ -188,7 +190,7 @@ export class ProjectileSystem {
               sphere.color,
               hit.object
             );
-            this.createExplosion(hit.point, hit.face.normal);
+            this.createExplosion(hit.point, hit.face.normal, sphere.color);
           }
 
           this.resetSphere(sphere);

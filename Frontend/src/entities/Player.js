@@ -38,6 +38,10 @@ export class Player {
     // --- STRZELANIE ---
     document.addEventListener("mousedown", () => {
       if (this.controls.isLocked && this.projectileSystem) {
+        // Najpierw strzel lokalnie
+        this.projectileSystem.shoot(this.camera);
+        
+        // Potem wyślij info do serwera
         if (this.engine.socket) {
           const direction = new THREE.Vector3();
           this.camera.getWorldDirection(direction);
@@ -53,10 +57,9 @@ export class Player {
               y: direction.y,
               z: direction.z,
             },
-            color: 0xff0000,
+            color: this.engine.playerColor, // Użyj koloru z engine
           });
         }
-        this.projectileSystem.shoot(this.camera);
       }
     });
   }
