@@ -21,6 +21,7 @@ export class Engine {
 
     this.isGameActive = false;
     this.playerColor = "#ff0000"; // Domyślny kolor
+    this.playerNick = "Player"; // Domyślny nick
   }
 
   init() {
@@ -41,7 +42,7 @@ export class Engine {
     setupInput();
     loadWorld(this.scene);
 
-    this.projectileSystem = new ProjectileSystem(this.scene, this);
+    this.projectileSystem = new ProjectileSystem(this.scene);
     this.player = new Player(this.camera, document.body, this.projectileSystem, this);
     this.scene.add(this.player.controls.getObject());
     this.devTools = new DevTools(this.scene, this.player);
@@ -56,6 +57,11 @@ export class Engine {
 
     this.onWindowResize = this.onWindowResize.bind(this);
     window.addEventListener("resize", this.onWindowResize);
+
+    // Obsługa eventu startGame z formularza
+    document.addEventListener('startGame', () => {
+      this.startFromMenu();
+    });
   }
 
   startFromMenu() {
@@ -67,6 +73,8 @@ export class Engine {
     const uiLayer = document.getElementById("ui-layer");
     const pauseScreen = document.getElementById("pause-screen");
     const playerBorder = document.getElementById("player-border");
+    const nickDisplay = document.querySelector("#nick-container .player-nick");
+    const nickColorBox = document.querySelector("#nick-container .player-nick-color-box");
 
     this.player.controls.addEventListener('lock', () => {
       // Przy aktywacji locka:
@@ -80,10 +88,20 @@ export class Engine {
         if (savedColor) {
           this.playerColor = savedColor;
         }
+
+        // Pobierz wybrany nick z localStorage
+        const savedNick = localStorage.getItem('playerName');
+        if (savedNick) {
+          this.playerNick = savedNick;
+        }
         
         // Ustaw kolor obramówki
         playerBorder.style.setProperty('--player-color', this.playerColor);
         playerBorder.classList.add('active');
+
+        // Ustaw nick i kolor w UI
+        nickDisplay.textContent = this.playerNick;
+        nickColorBox.style.backgroundColor = this.playerColor;
         
         if (!this.socket) this.initSocket();
       }
@@ -108,9 +126,10 @@ export class Engine {
   initSocket() {
     this.socket = io();
     
-    // Gdy połączenie się ustanowi, wyślij swój kolor
+    // Gdy połączenie się ustanowi, wyślij swój kolor i nick
     this.socket.on("connect", () => {
       this.socket.emit("changeColor", { color: this.playerColor });
+      this.socket.emit("changeNick", { nick: this.playerNick });
     });
     
     // Gdy wejdziemy, serwer wysyła listę obecnych graczy

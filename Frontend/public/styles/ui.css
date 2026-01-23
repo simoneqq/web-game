@@ -88,7 +88,6 @@
   background: black;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   color: white;
   z-index: 100;
@@ -167,4 +166,50 @@
   width: 4px;
   background: linear-gradient(to left, var(--player-color, #ff0000), transparent);
   box-shadow: 0 0 20px var(--player-color, #ff0000);
+}
+
+
+/* --- Nick UI --- */
+#nick-container {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  top: 20px;
+  left: 20px;
+  z-index: 999;
+}
+
+#nick-container .player-nick {
+  font-size: 24px;
+  color: white;
+  text-shadow: 0 0 5px black;
+}
+
+#nick-container .player-nick-color-box {
+  width: 20px;
+  height: 20px;
+  background-color: var(--player-color, #ff0000);
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: middle;
+  border: 2px solid white;
+  box-shadow: 0 0 5px black;
+}
+
+/* player form */
+#player-form {
+  background: rgba(0, 0, 200, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  z-index: 1000;
+}
+
+#player-form button {
+  width: 100%;
+}
+
+#main-menu h1 {
+  font-size: 5em;
 }
