@@ -25,6 +25,7 @@ io.on("connection", function (socket) {
 		y: 10,
 		z: 0,
 		rotation: 0,
+		health: 5, // HP gracza
 	};
 
   socket.emit("currentPlayers", players);
@@ -57,6 +58,45 @@ io.on("connection", function (socket) {
 		if (players[socket.id]) {
 			players[socket.id].nick = nickData.nick;
 			socket.broadcast.emit("updatePlayer", players[socket.id]);
+		}
+	});
+
+	socket.on("playerHit", function (hitData) {
+		// hitData zawiera { targetId, damage }
+		if (players[hitData.targetId]) {
+			players[hitData.targetId].health = Math.max(0, players[hitData.targetId].health - hitData.damage);
+			
+			// Wyślij do wszystkich informację o trafieniu
+			io.emit("playerDamaged", {
+				targetId: hitData.targetId,
+				attackerId: socket.id,
+				health: players[hitData.targetId].health
+			});
+
+			// Jeśli gracz zginął
+			if (players[hitData.targetId].health <= 0) {
+				io.emit("playerDied", {
+					playerId: hitData.targetId,
+					killerId: socket.id
+				});
+			}
+		}
+	});
+
+	socket.on("playerRespawn", function () {
+		if (players[socket.id]) {
+			players[socket.id].health = 5;
+			players[socket.id].x = 0;
+			players[socket.id].y = 10;
+			players[socket.id].z = 0;
+			
+			io.emit("playerRespawned", {
+				playerId: socket.id,
+				x: 0,
+				y: 10,
+				z: 0,
+				health: 5
+			});
 		}
 	});
 

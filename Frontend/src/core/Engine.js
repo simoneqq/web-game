@@ -72,6 +72,7 @@ export class Engine {
     const mainMenu = document.getElementById("main-menu");
     const uiLayer = document.getElementById("ui-layer");
     const pauseScreen = document.getElementById("pause-screen");
+    const deathScreen = document.getElementById("death-screen");
     const playerBorder = document.getElementById("player-border");
     const nickDisplay = document.querySelector("#nick-container .player-nick");
     const nickColorBox = document.querySelector("#nick-container .player-nick-color-box");
@@ -105,11 +106,16 @@ export class Engine {
         
         if (!this.socket) this.initSocket();
       }
+      // Ukryj pause screen i death screen przy locku
       pauseScreen.style.display = "none";
+      if (deathScreen) deathScreen.style.display = "none";
     });
 
     this.player.controls.addEventListener('unlock', () => {
-      if (this.isGameActive) pauseScreen.style.display = "flex";
+      // Pokaż pause screen tylko jeśli gracz nie jest martwy
+      if (this.isGameActive && !this.player.healthSystem.isDead) {
+        pauseScreen.style.display = "flex";
+      }
     });
 
     document.getElementById("resume-btn").addEventListener("click", () => {
@@ -163,6 +169,66 @@ export class Engine {
       if (this.remotePlayers[id]) {
         this.remotePlayers[id].removeFromScene(this.scene);
         delete this.remotePlayers[id];
+      }
+    });
+
+    // Gdy ktoś dostanie obrażenia
+    this.socket.on("playerDamaged", (damageData) => {
+      console.log("playerDamaged event:", damageData);
+      // Jeśli to my, zaktualizuj nasze HP
+      if (damageData.targetId === this.socket.id) {
+        this.player.healthSystem.currentHealth = damageData.health;
+        this.player.healthSystem.updateUI();
+        
+        // Jeśli HP = 0, wywołaj śmierć
+        if (damageData.health <= 0 && !this.player.healthSystem.isDead) {
+          console.log("Triggering death manually from playerDamaged");
+          this.player.healthSystem.isDead = true;
+          this.player.healthSystem.onDeath();
+          
+          // Despawn gracza
+          this.player.collider.start.set(0, -1000, 0);
+          this.player.collider.end.set(0, -1000 + this.player.currentHeight, 0);
+          this.player.camera.position.set(0, -1000, 0);
+          this.player.velocity.set(0, 0, 0);
+          
+          // Odblokuj pointer lock
+          if (this.player.controls.isLocked) {
+            this.player.controls.unlock();
+          }
+        }
+      }
+    });
+
+    // Gdy ktoś zginie
+    this.socket.on("playerDied", (deathData) => {
+      console.log("playerDied event:", deathData);
+      if (deathData.playerId === this.socket.id) {
+        // To my zginęliśmy - już obsłużone w playerDamaged
+        console.log(`You were killed by player ${deathData.killerId}`);
+      } else if (this.remotePlayers[deathData.playerId]) {
+        // Zdalny gracz zginął - ukryj go
+        console.log(`Remote player ${deathData.playerId} died`);
+        this.remotePlayers[deathData.playerId].mesh.visible = false;
+        this.remotePlayers[deathData.playerId].mesh.position.set(0, -1000, 0);
+      }
+    });
+
+    // Gdy ktoś się respawnuje
+    this.socket.on("playerRespawned", (respawnData) => {
+      console.log("playerRespawned event:", respawnData);
+      if (respawnData.playerId === this.socket.id) {
+        // To my się respawnujemy - już obsłużone w przycisku
+        console.log("We respawned");
+      } else if (this.remotePlayers[respawnData.playerId]) {
+        // Zdalny gracz się respawnuje - pokaż go z powrotem
+        console.log(`Remote player ${respawnData.playerId} respawned`);
+        this.remotePlayers[respawnData.playerId].mesh.visible = true;
+        this.remotePlayers[respawnData.playerId].update({
+          x: respawnData.x,
+          y: respawnData.y,
+          z: respawnData.z
+        });
       }
     });
   }

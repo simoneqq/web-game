@@ -213,3 +213,150 @@
 #main-menu h1 {
   font-size: 5em;
 }
+
+/* --- Health Hearts UI --- */
+#hearts-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  z-index: 999;
+}
+
+.heart {
+  width: 40px;
+  height: 40px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8));
+  transition: all 0.3s ease;
+}
+
+.heart-full {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff0000'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+}
+
+.heart-empty {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23333333'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  opacity: 0.3;
+}
+
+/* Animacja przy niskim HP */
+#hearts-container.low-health .heart-full {
+  animation: heartbeat 1s infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* --- Damage Overlay --- */
+#damage-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, transparent 0%, rgba(255, 0, 0, 0.3) 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 500;
+}
+
+#damage-overlay.active {
+  opacity: 1;
+}
+
+#damage-overlay.death {
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+/* --- Death Screen --- */
+#death-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.death-container {
+  text-align: center;
+  padding: 40px;
+  background: rgba(20, 20, 20, 0.8);
+  border-radius: 20px;
+  border: 3px solid rgba(255, 0, 0, 0.5);
+  box-shadow: 0 0 40px rgba(255, 0, 0, 0.3);
+}
+
+.death-title {
+  font-size: 80px;
+  color: #ff0000;
+  text-shadow: 0 0 20px rgba(255, 0, 0, 0.8),
+               0 0 40px rgba(255, 0, 0, 0.6);
+  margin: 0 0 20px 0;
+  animation: deathPulse 2s infinite;
+}
+
+@keyframes deathPulse {
+  0%, 100% {
+    transform: scale(1);
+    text-shadow: 0 0 20px rgba(255, 0, 0, 0.8),
+                 0 0 40px rgba(255, 0, 0, 0.6);
+  }
+  50% {
+    transform: scale(1.05);
+    text-shadow: 0 0 30px rgba(255, 0, 0, 1),
+                 0 0 60px rgba(255, 0, 0, 0.8);
+  }
+}
+
+.death-message {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 40px 0;
+}
+
+.respawn-button {
+  border-image-source: url("../ui/green_button_square_gradient.svg");
+  margin: 0 auto;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.respawn-button:hover {
+  transform: scale(1.15);
+  transition: all ease-out 0.15s;
+}
+
+.respawn-button:active {
+  transform: scale(1.05);
+}
