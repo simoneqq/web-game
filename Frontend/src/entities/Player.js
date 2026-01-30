@@ -5,6 +5,7 @@ import { keys } from "../core/Controls.js";
 import { GRAVITY, worldOctree } from "../core/Physics.js";
 import { StaminaSystem } from "../core/Stamina.js";
 import { SlideSystem } from "../core/Slide.js";
+import { HealthSystem } from "../core/Health.js";
 
 export class Player {
   constructor(camera, domElement, projectileSystem, engine) {
@@ -34,6 +35,30 @@ export class Player {
     // --- SYSTEMY ---
     this.staminaSystem = new StaminaSystem();
     this.slideSystem = new SlideSystem();
+    this.healthSystem = new HealthSystem(this); // Przekazuję referencję do siebie
+
+    // --- OBSŁUGA PRZYCISKU RESPAWN ---
+    const respawnBtn = document.getElementById("respawn-btn");
+    if (respawnBtn) {
+      console.log("Respawn button found, adding click listener");
+      respawnBtn.addEventListener("click", () => {
+        console.log("Respawn button clicked! isDead:", this.healthSystem.isDead);
+        if (this.healthSystem.isDead) {
+          console.log("Calling handleRespawn...");
+          this.healthSystem.handleRespawn();
+          
+          // Wyślij info do serwera o respawnie
+          if (this.engine.socket) {
+            console.log("Sending playerRespawn to server");
+            this.engine.socket.emit("playerRespawn", {});
+          }
+        } else {
+          console.log("Player is not dead, cannot respawn");
+        }
+      });
+    } else {
+      console.error("Respawn button not found!");
+    }
 
     // --- STRZELANIE ---
     document.addEventListener("mousedown", () => {
@@ -66,6 +91,9 @@ export class Player {
 
   update(delta) {
     if (!this.controls.isLocked) return;
+
+    // --- 0. AKTUALIZACJA HP ---
+    this.healthSystem.update(delta);
 
     // --- 1. WYSOKOŚĆ I KUCANIE ---
 
@@ -188,6 +216,45 @@ export class Player {
       this.camera.position.set(0, 1.6, 0);
       this.slideSystem.stop();
     }
+  }
+
+  takeDamage(amount = 1) {
+    console.log("Player.takeDamage called with amount:", amount);
+    const died = this.healthSystem.takeDamage(amount);
+    console.log("Health system returned died:", died);
+    
+    if (died) {
+      console.log("Player died! Despawning...");
+      // Natychmiast teleportuj gracza poza mapę (despawn)
+      this.collider.start.set(0, -1000, 0);
+      this.collider.end.set(0, -1000 + this.currentHeight, 0);
+      this.camera.position.set(0, -1000, 0);
+      this.velocity.set(0, 0, 0);
+      
+      console.log("Unlocking controls...");
+      // Odblokuj pointer lock żeby pokazać ekran śmierci
+      if (this.controls.isLocked) {
+        this.controls.unlock();
+      }
+    }
+  }
+
+  respawn() {
+    console.log("Player.respawn called - teleporting to spawn");
+    // Teleportuj gracza na spawn point
+    this.collider.start.set(0, 0.35, 0);
+    this.collider.end.set(0, 1.6, 0);
+    this.velocity.set(0, 0, 0);
+    this.currentHeight = 1.6;
+    this.camera.position.set(0, 1.6, 0);
+    this.slideSystem.stop();
+    
+    console.log("Player position reset, locking controls...");
+    // Zablokuj pointer lock ponownie
+    if (!this.controls.isLocked) {
+      this.controls.lock();
+    }
+    console.log("Player respawn complete");
   }
 
   checkCollisions() {
