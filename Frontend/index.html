@@ -23,9 +23,43 @@
         <p><label for="playerColorPicker"> CHOOSE YOUR COLOR:&nbsp;&nbsp;</label><input type="color" name="playerColorPicker" id="playerColorPicker" value="#ff0000"/></p>
         <p><label for="playerNameInput">CHOOSE YOUR NAME:&nbsp;&nbsp;</label><input type="text" id="playerNameInput" name="playerNameInput" placeholder="Player" maxlength="50"></p>
 
-      <button id="start-game-btn" class="start-btn" type="submit">ZAGRAJ</button>
+        <div class="team-choose-container">
+          <p>Click to join a team:</p>
+
+          <table>
+            <tr>
+              <th class="teamHeader">
+                <button type="button" onclick="joinTeam(1, this)">Team 1</button>
+              </th>
+              <th class="teamHeader">
+                <button type="button" onclick="joinTeam(2, this)">Team 2</button>
+              </th>
+            </tr>
+            <tr>
+              <td>slot1</td>
+              <td>slot1</td>
+            </tr>
+          </table>
+        </div>
+
+      <button id="start-game-btn" class="start-btn" disabled type="submit">ZAGRAJ</button>
       </form>
       <script>
+
+        let teamTag = 'noname';
+
+        function joinTeam(teamNumber, element) {
+          localStorage.setItem('playerTeam', teamNumber);
+          teamTag = "Team " + teamNumber;
+          const allButtons = document.querySelectorAll('.teamHeader button');
+          allButtons.forEach(btn => btn.disabled = false);
+
+          document.getElementById("start-game-btn").removeAttribute("disabled");
+
+          element.disabled = true;
+          alert("===DEBUG===\nJoined Team " + teamNumber);
+        }
+
         function updatePlayer(event) {
           event.preventDefault();
           // Pobieranie koloru gracza
@@ -38,10 +72,13 @@
 
           // Zapisz kolor i nick w localStorage do użycia przy starcie gry
           localStorage.setItem('playerColor', selectedColor);
-          localStorage.setItem('playerName', playerName);
+          localStorage.setItem('playerName', "[" + teamTag + "] " + playerName); // GRacz z tagiem
           
+          //localStorage.setItem('displayedName', "[" + teamTag + "] " + playerName);
           return false;
         }
+
+
       </script>
     </div>
 
@@ -103,6 +140,7 @@
         <progress id="stamina-bar" value="120" max="120"></progress>
       </div>
     </div>
+
     <!-- Socket.io - musi być przed main.js -->
     <script src="/socket.io/socket.io.js"></script>
 

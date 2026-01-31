@@ -105,6 +105,10 @@
   border-radius: 5px;
 }
 
+.start-btn:disabled {
+  background: #888888;
+  cursor: not-allowed;
+}
 /* Obramówka ekranu gracza */
 #player-border {
   position: fixed;
@@ -360,3 +364,5 @@
 .respawn-button:active {
   transform: scale(1.05);
 }
+
+/* --- Team Choose UI --- */
