@@ -22,6 +22,8 @@ export class Engine {
     this.isGameActive = false;
     this.playerColor = "#ff0000"; // Domyślny kolor
     this.playerNick = "Player"; // Domyślny nick
+    this.playerTeam = null; // Team gracza (1 lub 2)
+    this.allPlayers = {}; // Wszyscy gracze (do wyświetlania w tabelce)
   }
 
   init() {
@@ -90,19 +92,34 @@ export class Engine {
           this.playerColor = savedColor;
         }
 
-        // Pobierz wybrany nick z localStorage
-        const savedNick = localStorage.getItem('playerName');
-        if (savedNick) {
-          this.playerNick = savedNick;
+        // Pobierz wybrany team z localStorage
+        const savedTeam = localStorage.getItem('playerTeam');
+        if (savedTeam) {
+          this.playerTeam = parseInt(savedTeam);
         }
+
+        // Pobierz bazowy nick (bez tagu)
+        const savedNickBase = localStorage.getItem('playerNickBase') || 'Player';
+        this.playerNick = savedNickBase; // Tylko bazowy nick do serwera
+        
+        // Utwórz wyświetlany nick z tagiem dla UI
+        const teamTag = this.playerTeam ? `[Team ${this.playerTeam}] ` : '';
+        const displayNick = teamTag + savedNickBase;
         
         // Ustaw kolor obramówki
         playerBorder.style.setProperty('--player-color', this.playerColor);
         playerBorder.classList.add('active');
 
-        // Ustaw nick i kolor w UI
-        nickDisplay.textContent = this.playerNick;
+        // Ustaw nick z tagiem w UI
+        nickDisplay.textContent = displayNick;
         nickColorBox.style.backgroundColor = this.playerColor;
+        
+        // WAŻNE: Rozłącz previewSocket żeby nie było duplikacji
+        if (window.previewSocket && window.previewSocket.connected) {
+          console.log("Disconnecting preview socket before starting game");
+          window.previewSocket.disconnect();
+          window.previewSocket = null;
+        }
         
         if (!this.socket) this.initSocket();
       }
@@ -132,31 +149,51 @@ export class Engine {
   initSocket() {
     this.socket = io();
     
-    // Gdy połączenie się ustanowi, wyślij swój kolor i nick
+    // Gdy połączenie się ustanowi, wyślij wszystkie dane (previewSocket został rozłączony)
     this.socket.on("connect", () => {
+      // Wyślij kolor, nick i team
       this.socket.emit("changeColor", { color: this.playerColor });
-      this.socket.emit("changeNick", { nick: this.playerNick });
+      this.socket.emit("changeNick", { nick: this.playerNick }); // Bazowy nick bez tagu
+      
+      if (this.playerTeam !== null) {
+        this.socket.emit("changeTeam", { team: this.playerTeam });
+      }
     });
     
     // Gdy wejdziemy, serwer wysyła listę obecnych graczy
     this.socket.on("currentPlayers", (players) => {
+      this.allPlayers = players;
+      this.updateTeamUI();
+      
       Object.keys(players).forEach((id) => {
         if (id !== this.socket.id) {
           this.addRemotePlayer(players[id]);
         }
       });
     });
+
+    // Nasłuchiwanie na pełną listę graczy (do aktualizacji tabelki w menu)
+    this.socket.on("allPlayers", (players) => {
+      this.allPlayers = players;
+      this.updateTeamUI();
+    });
   
     // Gdy ktoś nowy wejdzie
     this.socket.on("newPlayer", (playerData) => {
       this.addRemotePlayer(playerData);
+      // Aktualizuj również allPlayers
+      this.allPlayers[playerData.id] = playerData;
+      this.updateTeamUI();
     });
   
-    // Gdy ktoś się ruszy lub zmieni kolor
+    // Gdy ktoś się ruszy lub zmieni kolor/team
     this.socket.on("updatePlayer", (playerData) => {
       if (this.remotePlayers[playerData.id]) {
         this.remotePlayers[playerData.id].update(playerData);
       }
+      // Aktualizuj również allPlayers
+      this.allPlayers[playerData.id] = playerData;
+      this.updateTeamUI();
     });
 
     // Gdy ktoś strzeli
@@ -170,6 +207,8 @@ export class Engine {
         this.remotePlayers[id].removeFromScene(this.scene);
         delete this.remotePlayers[id];
       }
+      delete this.allPlayers[id];
+      this.updateTeamUI();
     });
 
     // Gdy ktoś dostanie obrażenia
@@ -236,6 +275,12 @@ export class Engine {
   addRemotePlayer(data) {
     // Tworzymy obiekt RemotePlayer i zapisujemy w mapie
     this.remotePlayers[data.id] = new RemotePlayer(this.scene, data);
+  }
+
+  updateTeamUI() {
+    // Wyślij custom event z listą graczy do HTML
+    const event = new CustomEvent('playersUpdated', { detail: this.allPlayers });
+    window.dispatchEvent(event);
   }
   
   update(delta) {

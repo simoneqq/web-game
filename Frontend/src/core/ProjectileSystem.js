@@ -227,6 +227,9 @@ export class ProjectileSystem {
   }
 
   checkPlayerHit(sphere, prevPos) {
+    // Pobierz team strzelającego gracza (właściciela pocisku)
+    const shooterTeam = this.engine.playerTeam;
+
     // Sprawdź kolizję z lokalnym graczem
     if (this.engine.player && this.engine.player.healthSystem.canTakeDamage()) {
       const playerPos = this.engine.player.collider.start.clone();
@@ -236,6 +239,13 @@ export class ProjectileSystem {
       const hitRadius = sphere.collider.radius + this.engine.player.collider.radius;
       
       if (distance < hitRadius) {
+        // Sprawdź czy to friendly fire
+        const targetTeam = this.engine.playerTeam;
+        if (shooterTeam !== null && targetTeam !== null && shooterTeam === targetTeam) {
+          console.log("Friendly fire blocked - local player");
+          return false; // Nie zadawaj obrażeń
+        }
+
         // Trafienie!
         console.log("LOCAL PLAYER HIT! Distance:", distance, "Hit radius:", hitRadius);
         this.engine.player.takeDamage(1);
@@ -264,6 +274,13 @@ export class ProjectileSystem {
       const hitRadius = sphere.collider.radius + 0.35; // Promień kapsuły gracza
       
       if (distance < hitRadius) {
+        // Sprawdź czy to friendly fire
+        const targetTeam = remotePlayer.team;
+        if (shooterTeam !== null && targetTeam !== null && shooterTeam === targetTeam) {
+          console.log("Friendly fire blocked - remote player", playerId);
+          return false; // Nie zadawaj obrażeń
+        }
+
         // Trafienie w zdalnego gracza!
         console.log("REMOTE PLAYER HIT! Player ID:", playerId, "Distance:", distance);
         if (this.engine.socket) {
