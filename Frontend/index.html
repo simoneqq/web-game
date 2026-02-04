@@ -2,7 +2,7 @@
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
-    <title>Gra FPS Three.js - Poprawiona</title>
+    <title>Gargabe Collector - shooter</title>
     <link rel="stylesheet" href="/public/styles/style.css" />
     <link rel="stylesheet" href="/public/styles/ui.css" />
     <script type="importmap">
@@ -41,12 +41,12 @@
             <tr>
               <td id="team1-players" class="team-players-cell">
                 <div class="team-players-list">
-                  <!-- Gracze teamu 1 będą tutaj -->
+                  <div class="team-empty">No players yet</div>
                 </div>
               </td>
               <td id="team2-players" class="team-players-cell">
                 <div class="team-players-list">
-                  <!-- Gracze teamu 2 będą tutaj -->
+                  <div class="team-empty">No players yet</div>
                 </div>
               </td>
             </tr>
@@ -54,168 +54,7 @@
         </div>
 
       <button id="start-game-btn" class="start-btn" disabled type="button">ZAGRAJ</button>
-      <script>
 
-        let teamTag = 'noname';
-        let selectedTeam = null;
-        let playerColor = '#ff0000';
-        let playerNick = 'Player';
-        let playerDataSaved = false;
-        let previewSocket = null;
-
-        // Funkcja inicjalizująca połączenie socket tylko do podglądu teamów
-        function initPreviewSocket() {
-          if (window.previewSocket) return;
-          
-          window.previewSocket = io();
-          
-          // Nasłuchiwanie na różne eventy z serwera
-          window.previewSocket.on('allPlayers', (players) => {
-            console.log('Received allPlayers:', players);
-            updateTeamLists(players);
-          });
-
-          window.previewSocket.on('currentPlayers', (players) => {
-            console.log('Received currentPlayers:', players);
-            updateTeamLists(players);
-          });
-
-          window.previewSocket.on('updatePlayer', (playerData) => {
-            console.log('Received updatePlayer:', playerData);
-            // Poproś o pełną listę po każdej aktualizacji
-            window.previewSocket.emit('requestAllPlayers');
-          });
-
-          window.previewSocket.on('newPlayer', (playerData) => {
-            console.log('Received newPlayer:', playerData);
-            // Poproś o pełną listę
-            window.previewSocket.emit('requestAllPlayers');
-          });
-
-          window.previewSocket.on('deletePlayer', (playerId) => {
-            console.log('Player deleted:', playerId);
-            // Poproś o pełną listę
-            window.previewSocket.emit('requestAllPlayers');
-          });
-
-          // Po połączeniu, poproś o listę wszystkich graczy
-          window.previewSocket.on('connect', () => {
-            console.log('Preview socket connected');
-            window.previewSocket.emit('requestAllPlayers');
-          });
-        }
-
-        function joinTeam(teamNumber, element) {
-          if (!playerDataSaved) {
-            alert("Please save your name and color first!");
-            return;
-          }
-
-          localStorage.setItem('playerTeam', teamNumber);
-          selectedTeam = teamNumber;
-          teamTag = "Team " + teamNumber;
-          
-          const allButtons = document.querySelectorAll('.teamHeader button');
-          allButtons.forEach(btn => btn.disabled = false);
-
-          document.getElementById("start-game-btn").removeAttribute("disabled");
-
-          element.disabled = true;
-          
-          // Wyślij informację o wyborze teamu do serwera
-          if (window.previewSocket && window.previewSocket.connected) {
-            window.previewSocket.emit("changeTeam", { team: teamNumber });
-          }
-          
-          console.log("Joined Team " + teamNumber);
-        }
-
-        function updatePlayer(event) {
-          event.preventDefault();
-          
-          // Pobieranie koloru gracza
-          const colorInput = document.getElementById("playerColorPicker");
-          const selectedColor = colorInput.value;
-          
-          // Pobieranie nicku
-          const playerNameInput = document.getElementById("playerNameInput");
-          const playerName = playerNameInput.value || "Player";
-
-          playerColor = selectedColor;
-          playerNick = playerName;
-          playerDataSaved = true;
-
-          // Zapisz kolor i nick w localStorage
-          localStorage.setItem('playerColor', selectedColor);
-          localStorage.setItem('playerNickBase', playerName);
-          
-          // Inicjalizuj socket do podglądu teamów
-          initPreviewSocket();
-          
-          // Wyślij podstawowe dane do serwera (bazowy nick, bez tagu teamu)
-          if (window.previewSocket && window.previewSocket.connected) {
-            window.previewSocket.emit("changeColor", { color: selectedColor });
-            window.previewSocket.emit("changeNick", { nick: playerName }); // Nick bez tagu
-          } else {
-            // Jeśli socket nie jest jeszcze gotowy, poczekaj chwilę
-            setTimeout(() => {
-              if (window.previewSocket && window.previewSocket.connected) {
-                window.previewSocket.emit("changeColor", { color: selectedColor });
-                window.previewSocket.emit("changeNick", { nick: playerName }); // Nick bez tagu
-              }
-            }, 500);
-          }
-          
-          alert("Data saved! Now you can join a team.");
-          
-          return false;
-        }
-
-        // Funkcja do aktualizacji listy graczy w teamach
-        function updateTeamLists(allPlayers) {
-          const team1List = document.querySelector('#team1-players .team-players-list');
-          const team2List = document.querySelector('#team2-players .team-players-list');
-          
-          if (!team1List || !team2List) return;
-          
-          // Wyczyść listy
-          team1List.innerHTML = '';
-          team2List.innerHTML = '';
-          
-          // Podziel graczy na teamy - pokazuj tylko bazowy nick (bez tagu)
-          Object.values(allPlayers).forEach(player => {
-            const playerDiv = document.createElement('div');
-            playerDiv.className = 'team-player-item';
-            playerDiv.style.color = player.color || '#ffffff';
-            playerDiv.textContent = player.nick || 'Player'; // Tylko bazowy nick
-            
-            if (player.team === 1) {
-              team1List.appendChild(playerDiv);
-            } else if (player.team === 2) {
-              team2List.appendChild(playerDiv);
-            }
-          });
-          
-          // Jeśli team jest pusty, pokaż komunikat
-          if (team1List.children.length === 0) {
-            team1List.innerHTML = '<div class="team-empty">No players yet</div>';
-          }
-          if (team2List.children.length === 0) {
-            team2List.innerHTML = '<div class="team-empty">No players yet</div>';
-          }
-        }
-
-        // Nasłuchiwanie na aktualizacje graczy
-        window.addEventListener('DOMContentLoaded', () => {
-          // Inicjalizuj socket do podglądu od razu przy ładowaniu strony
-          initPreviewSocket();
-          
-          window.addEventListener('playersUpdated', (event) => {
-            updateTeamLists(event.detail);
-          });
-        });
-
-      </script>
     </div>
 
     <div id="ui-layer">
@@ -263,7 +102,7 @@
 
       <div id="nick-container">
         <div class="player-nick-color-box"></div>
-        <div class="player-nick">Player</div> <!-- tu wpisuje sie nick gracza -->
+        <div class="player-nick">Player</div>
       </div>
 
       <div id="slide-cooldown-container">
@@ -279,6 +118,97 @@
 
     <!-- Socket.io - musi być przed main.js -->
     <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      // Skrypt menu - współpracuje z Engine
+      let playerDataSaved = false;
+      
+      function updatePlayer(event) {
+        event.preventDefault();
+        
+        const colorInput = document.getElementById("playerColorPicker");
+        const selectedColor = colorInput.value;
+        
+        const playerNameInput = document.getElementById("playerNameInput");
+        const playerName = playerNameInput.value || "Player";
+
+        playerDataSaved = true;
+
+        // Zapisz kolor i nick w localStorage
+        localStorage.setItem('playerColor', selectedColor);
+        localStorage.setItem('playerNickBase', playerName);
+        
+        // Wyślij event do Engine
+        window.dispatchEvent(new CustomEvent('playerDataSaved', { 
+          detail: { color: selectedColor, nick: playerName } 
+        }));
+        
+        // DEBUG
+        // alert("Data saved! Now you can join a team.");
+        
+        return false;
+      }
+
+      function joinTeam(teamNumber, element) {
+        if (!playerDataSaved) {
+          alert("Please save your name and color first!");
+          return;
+        }
+
+        localStorage.setItem('playerTeam', teamNumber);
+        
+        const allButtons = document.querySelectorAll('.teamHeader button');
+        allButtons.forEach(btn => btn.disabled = false);
+
+        document.getElementById("start-game-btn").removeAttribute("disabled");
+
+        element.disabled = true;
+        
+        // Wyślij event do Engine
+        window.dispatchEvent(new CustomEvent('teamSelected', { detail: teamNumber }));
+        
+        console.log("Joined Team " + teamNumber);
+      }
+
+      // Funkcja do aktualizacji listy graczy w teamach
+      function updateTeamLists(allPlayers) {
+        const team1List = document.querySelector('#team1-players .team-players-list');
+        const team2List = document.querySelector('#team2-players .team-players-list');
+        
+        if (!team1List || !team2List) return;
+        
+        // Wyczyść listy
+        team1List.innerHTML = '';
+        team2List.innerHTML = '';
+        
+        // Podziel graczy na teamy
+        Object.values(allPlayers).forEach(player => {
+          const playerDiv = document.createElement('div');
+          playerDiv.className = 'team-player-item';
+          playerDiv.style.color = player.color || '#ffffff';
+          playerDiv.textContent = player.nick || 'Player';
+          
+          if (player.team === 1) {
+            team1List.appendChild(playerDiv);
+          } else if (player.team === 2) {
+            team2List.appendChild(playerDiv);
+          }
+        });
+        
+        // Jeśli team jest pusty, pokaż komunikat
+        if (team1List.children.length === 0) {
+          team1List.innerHTML = '<div class="team-empty">No players yet</div>';
+        }
+        if (team2List.children.length === 0) {
+          team2List.innerHTML = '<div class="team-empty">No players yet</div>';
+        }
+      }
+
+      // Nasłuchiwanie na aktualizacje graczy z Engine
+      window.addEventListener('playersUpdated', (event) => {
+        updateTeamLists(event.detail);
+      });
+    </script>
 
     <!-- Twój główny skrypt gry -->
     <script type="module" src="/src/main.js"></script>

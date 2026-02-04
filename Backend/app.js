@@ -23,7 +23,7 @@ io.on("connection", function (socket) {
 		nick: "Player", // bazowy nick bez tagu
 		team: null, // team gracza (1 lub 2)
 		x: 0,
-		y: 10,
+		y: -10,
 		z: 0,
 		rotation: 0,
 		health: 5, // HP gracza

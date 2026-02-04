@@ -60,9 +60,23 @@ export class Engine {
     this.onWindowResize = this.onWindowResize.bind(this);
     window.addEventListener("resize", this.onWindowResize);
 
-    // Obsługa eventu startGame z formularza
-    document.addEventListener('startGame', () => {
-      this.startFromMenu();
+    // Inicjalizuj socket OD RAZU (nie czekaj na lock)
+    this.initSocket();
+
+    // Obsługa eventów z menu HTML
+    window.addEventListener('playerDataSaved', (event) => {
+      console.log('Player data saved:', event.detail);
+      if (this.socket && this.socket.connected) {
+        this.socket.emit("changeColor", { color: event.detail.color });
+        this.socket.emit("changeNick", { nick: event.detail.nick });
+      }
+    });
+
+    window.addEventListener('teamSelected', (event) => {
+      console.log('Team selected:', event.detail);
+      if (this.socket && this.socket.connected) {
+        this.socket.emit("changeTeam", { team: event.detail });
+      }
     });
   }
 
@@ -100,7 +114,7 @@ export class Engine {
 
         // Pobierz bazowy nick (bez tagu)
         const savedNickBase = localStorage.getItem('playerNickBase') || 'Player';
-        this.playerNick = savedNickBase; // Tylko bazowy nick do serwera
+        this.playerNick = savedNickBase;
         
         // Utwórz wyświetlany nick z tagiem dla UI
         const teamTag = this.playerTeam ? `[Team ${this.playerTeam}] ` : '';
@@ -113,15 +127,6 @@ export class Engine {
         // Ustaw nick z tagiem w UI
         nickDisplay.textContent = displayNick;
         nickColorBox.style.backgroundColor = this.playerColor;
-        
-        // WAŻNE: Rozłącz previewSocket żeby nie było duplikacji
-        if (window.previewSocket && window.previewSocket.connected) {
-          console.log("Disconnecting preview socket before starting game");
-          window.previewSocket.disconnect();
-          window.previewSocket = null;
-        }
-        
-        if (!this.socket) this.initSocket();
       }
       // Ukryj pause screen i death screen przy locku
       pauseScreen.style.display = "none";
@@ -149,15 +154,9 @@ export class Engine {
   initSocket() {
     this.socket = io();
     
-    // Gdy połączenie się ustanowi, wyślij wszystkie dane (previewSocket został rozłączony)
+    // Gdy połączenie się ustanowi - dane zostaną wysłane przez eventy z HTML
     this.socket.on("connect", () => {
-      // Wyślij kolor, nick i team
-      this.socket.emit("changeColor", { color: this.playerColor });
-      this.socket.emit("changeNick", { nick: this.playerNick }); // Bazowy nick bez tagu
-      
-      if (this.playerTeam !== null) {
-        this.socket.emit("changeTeam", { team: this.playerTeam });
-      }
+      console.log("Socket connected:", this.socket.id);
     });
     
     // Gdy wejdziemy, serwer wysyła listę obecnych graczy
