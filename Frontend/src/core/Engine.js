@@ -6,6 +6,7 @@ import { RemotePlayer } from "../entities/RemotePlayers.js";
 import { DevTools } from "./DevTools.js";
 import { ProjectileSystem } from "./ProjectileSystem.js";
 import { loadWorld } from "../scenes/ModelScene.js";
+import { Chat } from "./Chat.js";
 
 export class Engine {
   constructor() {
@@ -22,6 +23,8 @@ export class Engine {
     this.isGameActive = false;
     this.playerColor = "#ff0000"; // Domyślny kolor
     this.playerNick = "Player"; // Domyślny nick
+
+    this.chat = new Chat(this);
   }
 
   init() {
@@ -113,7 +116,7 @@ export class Engine {
 
     this.player.controls.addEventListener('unlock', () => {
       // Pokaż pause screen tylko jeśli gracz nie jest martwy
-      if (this.isGameActive && !this.player.healthSystem.isDead) {
+      if (this.isGameActive && !this.player.healthSystem.isDead && !this.chat.isActive) {
         pauseScreen.style.display = "flex";
       }
     });
@@ -231,6 +234,8 @@ export class Engine {
         });
       }
     });
+
+    this.chat.initNetwork(this.socket);
   }
   
   addRemotePlayer(data) {

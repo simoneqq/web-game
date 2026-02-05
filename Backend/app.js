@@ -83,6 +83,18 @@ io.on("connection", function (socket) {
 		}
 	});
 
+	socket.on("chatMessage", (text) => {
+    const player = players[socket.id];
+    const authorName = player ? player.nick : "Unknown";
+    const authorColor = player ? player.color : "#ffffff";
+
+    io.emit("chatMessage", {
+        author: authorName,
+        text: text,
+				color: authorColor
+    });
+});
+
 	socket.on("playerRespawn", function () {
 		if (players[socket.id]) {
 			players[socket.id].health = 5;

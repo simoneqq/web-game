@@ -19,11 +19,30 @@
     <div id="main-menu">
       <h1>MENU</h1>
 
-      <form onsubmit="return updatePlayer(event)" id="player-form">
-        <p><label for="playerColorPicker"> CHOOSE YOUR COLOR:&nbsp;&nbsp;</label><input type="color" name="playerColorPicker" id="playerColorPicker" value="#ff0000"/></p>
-        <p><label for="playerNameInput">CHOOSE YOUR NAME:&nbsp;&nbsp;</label><input type="text" id="playerNameInput" name="playerNameInput" placeholder="Player" maxlength="50"></p>
+      <form onsubmit="return updatePlayer(event);" id="player-form">
+        <p>
+          <label for="playerColorPicker"> CHOOSE YOUR COLOR:&nbsp;&nbsp;</label
+          ><input
+            type="color"
+            name="playerColorPicker"
+            id="playerColorPicker"
+            value="#ff0000"
+          />
+        </p>
+        <p>
+          <label for="playerNameInput">CHOOSE YOUR NAME:&nbsp;&nbsp;</label
+          ><input
+            type="text"
+            id="playerNameInput"
+            name="playerNameInput"
+            placeholder="Player"
+            maxlength="50"
+          />
+        </p>
 
-      <button id="start-game-btn" class="start-btn" type="submit">ZAGRAJ</button>
+        <button id="start-game-btn" class="start-btn" type="submit">
+          ZAGRAJ
+        </button>
       </form>
       <script>
         function updatePlayer(event) {
@@ -31,15 +50,15 @@
           // Pobieranie koloru gracza
           const colorInput = document.getElementById("playerColorPicker");
           const selectedColor = colorInput.value;
-          
+
           // Pobieranie nicku
           const playerNameInput = document.getElementById("playerNameInput");
           const playerName = playerNameInput.value || "Player"; // Jak nic nie wpisze to Player
 
           // Zapisz kolor i nick w localStorage do użycia przy starcie gry
-          localStorage.setItem('playerColor', selectedColor);
-          localStorage.setItem('playerName', playerName);
-          
+          localStorage.setItem("playerColor", selectedColor);
+          localStorage.setItem("playerName", playerName);
+
           return false;
         }
       </script>
@@ -59,7 +78,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- OBRAMÓWKA GRACZA -->
       <div id="player-border">
         <div class="border-left"></div>
@@ -83,6 +102,16 @@
         </div>
       </div>
 
+      <div id="chat-container">
+        <div id="chat-messages"></div>
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Naciśnij Enter, aby pisać..."
+          autocomplete="off"
+        />
+      </div>
+
       <div id="crosshair"></div>
 
       <!-- HP Hearts -->
@@ -90,7 +119,8 @@
 
       <div id="nick-container">
         <div class="player-nick-color-box"></div>
-        <div class="player-nick">Player</div> <!-- tu wpisuje sie nick gracza -->
+        <div class="player-nick">Player</div>
+        <!-- tu wpisuje sie nick gracza -->
       </div>
 
       <div id="slide-cooldown-container">
