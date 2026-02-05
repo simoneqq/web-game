@@ -148,13 +148,57 @@ progress {
   letter-spacing: 2px;
 }
 
+#scoreboard {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 250px; /* Nieco węższy, by nie zasłaniał środka */
+    background: rgba(0, 0, 0, 0.5); /* Bardziej przezroczysty */
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+    border-right: 4px solid rgba(255, 255, 255, 0.2);
+    pointer-events: none; /* Nie przechwytuje myszki - ważne! */
+}
+
+.scoreboard-header {
+    display: grid;
+    grid-template-columns: 30px 1fr 50px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    color: #ccc;
+}
+
+.score-row {
+    display: grid;
+    grid-template-columns: 30px 1fr 50px;
+    padding: 4px 0;
+    font-size: 14px;
+    align-items: center;
+}
+
+.score-row.is-me {
+    background: rgba(255, 255, 255, 0.15);
+    font-weight: bold;
+}
+
+.scoreboard-entry {
+  color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 #chat-container {
   position: absolute;
-  top: 50px; /* Albo top: 20px, zależnie od preferencji */
+  top: 50px;
   left: 20px;
   width: 300px;
   z-index: 100;
-  pointer-events: none; /* Pozwala klikać "przez" czat, gdy jest nieaktywny */
+  pointer-events: none;
 }
 
 #chat-messages {
@@ -162,7 +206,6 @@ progress {
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.4);
   color: white;
-  font-family: Arial, sans-serif;
   padding: 10px;
   margin-bottom: 5px;
   display: flex;
@@ -183,9 +226,4 @@ progress {
 .chat-message {
   margin-bottom: 4px;
   word-wrap: break-word;
-}
-
-.chat-author {
-  font-weight: bold;
-  color: #ffcc00; /* Złoty kolor dla nicku */
 }

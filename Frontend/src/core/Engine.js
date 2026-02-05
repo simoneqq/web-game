@@ -7,6 +7,7 @@ import { DevTools } from "./DevTools.js";
 import { ProjectileSystem } from "./ProjectileSystem.js";
 import { loadWorld } from "../scenes/ModelScene.js";
 import { Chat } from "./Chat.js";
+import { Scoreboard } from "./Scoreboard.js";
 
 export class Engine {
   constructor() {
@@ -25,6 +26,9 @@ export class Engine {
     this.playerNick = "Player"; // Domyślny nick
 
     this.chat = new Chat(this);
+
+    this.myKills = 0;
+    this.scoreboard = new Scoreboard(this);
   }
 
   init() {
@@ -150,9 +154,31 @@ export class Engine {
       });
     });
   
+    this.socket.on("updateKills", (data) => {
+        if (data.playerId === this.socket.id) {
+            this.myKills = data.kills;
+        } else if (this.remotePlayers[data.playerId]) {
+            this.remotePlayers[data.playerId].kills = data.kills;
+        }
+        this.scoreboard.update();
+    });
+
+    this.socket.on("currentPlayers", (players) => {
+        Object.keys(players).forEach((id) => {
+            if (id !== this.socket.id) {
+                this.addRemotePlayer(players[id]);
+                this.remotePlayers[id].kills = players[id].kills || 0;
+            } else {
+                this.myKills = players[id].kills || 0;
+            }
+        });
+        this.scoreboard.update();
+    });
+
     // Gdy ktoś nowy wejdzie
     this.socket.on("newPlayer", (playerData) => {
       this.addRemotePlayer(playerData);
+      this.scoreboard.update();
     });
   
     // Gdy ktoś się ruszy lub zmieni kolor
@@ -172,6 +198,7 @@ export class Engine {
       if (this.remotePlayers[id]) {
         this.remotePlayers[id].removeFromScene(this.scene);
         delete this.remotePlayers[id];
+        this.scoreboard.update();
       }
     });
 
