@@ -42,11 +42,14 @@ export class Player {
     if (respawnBtn) {
       console.log("Respawn button found, adding click listener");
       respawnBtn.addEventListener("click", () => {
-        console.log("Respawn button clicked! isDead:", this.healthSystem.isDead);
+        console.log(
+          "Respawn button clicked! isDead:",
+          this.healthSystem.isDead,
+        );
         if (this.healthSystem.isDead) {
           console.log("Calling handleRespawn...");
           this.healthSystem.handleRespawn();
-          
+
           // Wyślij info do serwera o respawnie
           if (this.engine.socket) {
             console.log("Sending playerRespawn to server");
@@ -63,9 +66,10 @@ export class Player {
     // --- STRZELANIE ---
     document.addEventListener("mousedown", () => {
       if (this.controls.isLocked && this.projectileSystem) {
+        this.applyRecoil();
         // Najpierw strzel lokalnie
         this.projectileSystem.shoot(this.camera);
-        
+
         // Potem wyślij info do serwera
         if (this.engine.socket) {
           const direction = new THREE.Vector3();
@@ -87,6 +91,12 @@ export class Player {
         }
       }
     });
+  }
+
+  applyRecoil() {
+    this.recoilAmount += this.recoilStrength;
+    // Ograniczenie maksymalnego odrzutu (np. max 15 stopni)
+    this.recoilAmount = Math.min(this.recoilAmount, 0.25);
   }
 
   update(delta) {
@@ -222,7 +232,7 @@ export class Player {
     console.log("Player.takeDamage called with amount:", amount);
     const died = this.healthSystem.takeDamage(amount);
     console.log("Health system returned died:", died);
-    
+
     if (died) {
       console.log("Player died! Despawning...");
       // Natychmiast teleportuj gracza poza mapę (despawn)
@@ -230,7 +240,7 @@ export class Player {
       this.collider.end.set(0, -1000 + this.currentHeight, 0);
       this.camera.position.set(0, -1000, 0);
       this.velocity.set(0, 0, 0);
-      
+
       console.log("Unlocking controls...");
       // Odblokuj pointer lock żeby pokazać ekran śmierci
       if (this.controls.isLocked) {
@@ -248,7 +258,7 @@ export class Player {
     this.currentHeight = 1.6;
     this.camera.position.set(0, 1.6, 0);
     this.slideSystem.stop();
-    
+
     console.log("Player position reset, locking controls...");
     // Zablokuj pointer lock ponownie
     if (!this.controls.isLocked) {

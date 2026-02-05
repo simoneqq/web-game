@@ -6,6 +6,8 @@ import * as THREE from "three";
 export function loadWorld(scene) {
   const loader = new GLTFLoader().setPath("./models/");
 
+  scene.background = new THREE.Color(0x7092AE);
+
   loader.load("collision-world.glb", (gltf) => {
     scene.add(gltf.scene);
 

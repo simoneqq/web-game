@@ -55,6 +55,8 @@ export class ProjectileSystem {
     sphere.active = true;
     sphere.mesh.visible = true;
 
+    sphere.ownerId = this.engine.socket ? this.engine.socket.id : "local";
+
     // Pobierz kolor gracza z engine
     const playerColor = this.engine ? this.engine.playerColor : "#ff0000";
     sphere.mesh.material.color.set(playerColor);
@@ -65,8 +67,8 @@ export class ProjectileSystem {
     camera.getWorldDirection(direction);
     sphere.collider.center
       .copy(camera.position)
-      .addScaledVector(direction, 1.0);
-    sphere.mesh.position.copy(sphere.collider.center);
+      .addScaledVector(direction, 1.5);
+    sphere.mesh.position.copy(sphere.collider.center);  
 
     sphere.velocity.copy(direction).multiplyScalar(SPEED);
   }
@@ -77,6 +79,7 @@ export class ProjectileSystem {
 
     sphere.active = true;
     sphere.mesh.visible = true;
+    sphere.ownerId = data.ownerId;
 
     if (data.color) {
       sphere.color.set(data.color);
@@ -227,62 +230,43 @@ export class ProjectileSystem {
   }
 
   checkPlayerHit(sphere, prevPos) {
-    // Sprawdź kolizję z lokalnym graczem
-    if (this.engine.player && this.engine.player.healthSystem.canTakeDamage()) {
-      const playerPos = this.engine.player.collider.start.clone();
-      playerPos.y += this.engine.player.currentHeight / 2; // Środek kapsuły gracza
-      
-      const distance = sphere.collider.center.distanceTo(playerPos);
-      const hitRadius = sphere.collider.radius + this.engine.player.collider.radius;
-      
-      if (distance < hitRadius) {
-        // Trafienie!
-        console.log("LOCAL PLAYER HIT! Distance:", distance, "Hit radius:", hitRadius);
-        this.engine.player.takeDamage(1);
-        
-        // Wyślij info do serwera
-        if (this.engine.socket) {
-          console.log("Sending playerHit to server for local player");
-          this.engine.socket.emit("playerHit", {
-            targetId: this.engine.socket.id,
-            damage: 1
-          });
+    const myId = this.engine.socket ? this.engine.socket.id : "local";
+
+    if (sphere.ownerId === myId) {
+        for (const playerId in this.engine.remotePlayers) {
+            const remotePlayer = this.engine.remotePlayers[playerId];
+            if (!remotePlayer || !remotePlayer.mesh) continue;
+
+            const distance = sphere.collider.center.distanceTo(remotePlayer.mesh.position);
+            const hitRadius = sphere.collider.radius + 0.35;
+
+            if (distance < hitRadius) {
+                if (this.engine.socket) {
+                    this.engine.socket.emit("playerHit", { targetId: playerId, damage: 1 });
+                }
+                this.createExplosion(sphere.collider.center, new THREE.Vector3(0, 1, 0), sphere.color);
+                return true;
+            }
         }
-        
-        // Efekt wizualny trafienia
-        this.createExplosion(sphere.collider.center, new THREE.Vector3(0, 1, 0), sphere.color);
-        return true;
-      }
+        return false;
     }
 
-    // Sprawdź kolizję ze zdalnymi graczami
-    for (const playerId in this.engine.remotePlayers) {
-      const remotePlayer = this.engine.remotePlayers[playerId];
-      if (!remotePlayer || !remotePlayer.mesh) continue;
-      
-      const distance = sphere.collider.center.distanceTo(remotePlayer.mesh.position);
-      const hitRadius = sphere.collider.radius + 0.35; // Promień kapsuły gracza
-      
-      if (distance < hitRadius) {
-        // Trafienie w zdalnego gracza!
-        console.log("REMOTE PLAYER HIT! Player ID:", playerId, "Distance:", distance);
-        if (this.engine.socket) {
-          console.log("Sending playerHit to server for remote player:", playerId);
-          this.engine.socket.emit("playerHit", {
-            targetId: playerId,
-            damage: 1
-          });
+    if (this.engine.player && this.engine.player.healthSystem.canTakeDamage()) {
+        const playerPos = this.engine.player.collider.start.clone();
+        playerPos.y += this.engine.player.currentHeight / 2;
+
+        const distance = sphere.collider.center.distanceTo(playerPos);
+        const hitRadius = sphere.collider.radius + this.engine.player.collider.radius;
+
+        if (distance < hitRadius) {
+            this.engine.player.takeDamage(1);
+            this.createExplosion(sphere.collider.center, new THREE.Vector3(0, 1, 0), sphere.color);
+            return true;
         }
-        
-        // Efekt wizualny
-        this.createExplosion(sphere.collider.center, new THREE.Vector3(0, 1, 0), sphere.color);
-        return true;
-      }
     }
     
     return false;
-  }
-
+}
   resetSphere(sphere) {
     sphere.active = false;
     sphere.mesh.visible = false;

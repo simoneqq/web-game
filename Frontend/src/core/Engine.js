@@ -8,6 +8,7 @@ import { ProjectileSystem } from "./ProjectileSystem.js";
 import { loadWorld } from "../scenes/ModelScene.js";
 import { Chat } from "./Chat.js";
 import { Scoreboard } from "./Scoreboard.js";
+import { SPAWN_POINTS } from "../utils/Consts.js";
 
 export class Engine {
   constructor() {
@@ -29,6 +30,12 @@ export class Engine {
 
     this.myKills = 0;
     this.scoreboard = new Scoreboard(this);
+
+    // ograniczanie przysylania danych
+    this.lastSocketUpdate = 0; // Kiedy ostatnio wysłaliśmy dane
+    this.socketUpdateRate = 50; // Co ile ms wysyłać (50ms = 20 razy na sek)
+    this.lastPosition = new THREE.Vector3(); // Gdzie byliśmy ostatnio
+    this.lastRotation = 0; // Jaka była rotacja ostatnio
   }
 
   init() {
@@ -50,7 +57,22 @@ export class Engine {
     loadWorld(this.scene);
 
     this.projectileSystem = new ProjectileSystem(this.scene, this);
-    this.player = new Player(this.camera, document.body, this.projectileSystem, this);
+    this.player = new Player(
+      this.camera,
+      document.body,
+      this.projectileSystem,
+      this,
+    );
+
+    // ... wewnątrz init() po stworzeniu player'a
+    const spawn = this.getRandomSpawn();
+    const playerHeight = 1.6; // Upewnij się, że to pasuje do Twojej klasy Player
+
+    this.player.collider.start.set(spawn.x, spawn.y, spawn.z);
+    this.player.collider.end.set(spawn.x, spawn.y + playerHeight, spawn.z);
+    this.player.camera.position.copy(this.player.collider.end);
+    this.player.controls.getObject().rotation.y = spawn.angle;
+
     this.scene.add(this.player.controls.getObject());
     this.devTools = new DevTools(this.scene, this.player);
 
@@ -66,7 +88,7 @@ export class Engine {
     window.addEventListener("resize", this.onWindowResize);
 
     // Obsługa eventu startGame z formularza
-    document.addEventListener('startGame', () => {
+    document.addEventListener("startGame", () => {
       this.startFromMenu();
     });
   }
@@ -74,7 +96,11 @@ export class Engine {
   startFromMenu() {
     this.player.controls.lock();
   }
-  
+
+  getRandomSpawn() {
+    return SPAWN_POINTS[Math.floor(Math.random() * SPAWN_POINTS.length)];
+  }
+
   setUpPointerLock() {
     const mainMenu = document.getElementById("main-menu");
     const uiLayer = document.getElementById("ui-layer");
@@ -82,35 +108,37 @@ export class Engine {
     const deathScreen = document.getElementById("death-screen");
     const playerBorder = document.getElementById("player-border");
     const nickDisplay = document.querySelector("#nick-container .player-nick");
-    const nickColorBox = document.querySelector("#nick-container .player-nick-color-box");
+    const nickColorBox = document.querySelector(
+      "#nick-container .player-nick-color-box",
+    );
 
-    this.player.controls.addEventListener('lock', () => {
+    this.player.controls.addEventListener("lock", () => {
       // Przy aktywacji locka:
       if (!this.isGameActive) {
         this.isGameActive = true;
         mainMenu.style.display = "none";
         uiLayer.style.display = "block";
-        
+
         // Pobierz wybrany kolor z localStorage
-        const savedColor = localStorage.getItem('playerColor');
+        const savedColor = localStorage.getItem("playerColor");
         if (savedColor) {
           this.playerColor = savedColor;
         }
 
         // Pobierz wybrany nick z localStorage
-        const savedNick = localStorage.getItem('playerName');
+        const savedNick = localStorage.getItem("playerName");
         if (savedNick) {
           this.playerNick = savedNick;
         }
-        
+
         // Ustaw kolor obramówki
-        playerBorder.style.setProperty('--player-color', this.playerColor);
-        playerBorder.classList.add('active');
+        playerBorder.style.setProperty("--player-color", this.playerColor);
+        playerBorder.classList.add("active");
 
         // Ustaw nick i kolor w UI
         nickDisplay.textContent = this.playerNick;
         nickColorBox.style.backgroundColor = this.playerColor;
-        
+
         if (!this.socket) this.initSocket();
       }
       // Ukryj pause screen i death screen przy locku
@@ -118,9 +146,13 @@ export class Engine {
       if (deathScreen) deathScreen.style.display = "none";
     });
 
-    this.player.controls.addEventListener('unlock', () => {
+    this.player.controls.addEventListener("unlock", () => {
       // Pokaż pause screen tylko jeśli gracz nie jest martwy
-      if (this.isGameActive && !this.player.healthSystem.isDead && !this.chat.isActive) {
+      if (
+        this.isGameActive &&
+        !this.player.healthSystem.isDead &&
+        !this.chat.isActive
+      ) {
         pauseScreen.style.display = "flex";
       }
     });
@@ -129,22 +161,22 @@ export class Engine {
       this.player.controls.lock();
     });
   }
-  
+
   onWindowResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
-  
+
   initSocket() {
     this.socket = io();
-    
+
     // Gdy połączenie się ustanowi, wyślij swój kolor i nick
     this.socket.on("connect", () => {
       this.socket.emit("changeColor", { color: this.playerColor });
       this.socket.emit("changeNick", { nick: this.playerNick });
     });
-    
+
     // Gdy wejdziemy, serwer wysyła listę obecnych graczy
     this.socket.on("currentPlayers", (players) => {
       Object.keys(players).forEach((id) => {
@@ -153,26 +185,30 @@ export class Engine {
         }
       });
     });
-  
+
     this.socket.on("updateKills", (data) => {
-        if (data.playerId === this.socket.id) {
-            this.myKills = data.kills;
-        } else if (this.remotePlayers[data.playerId]) {
-            this.remotePlayers[data.playerId].kills = data.kills;
-        }
-        this.scoreboard.update();
+      if (data.playerId === this.socket.id) {
+        this.myKills = data.kills;
+      } else if (this.remotePlayers[data.playerId]) {
+        this.remotePlayers[data.playerId].kills = data.kills;
+      }
+      this.scoreboard.update();
     });
 
     this.socket.on("currentPlayers", (players) => {
-        Object.keys(players).forEach((id) => {
-            if (id !== this.socket.id) {
-                this.addRemotePlayer(players[id]);
-                this.remotePlayers[id].kills = players[id].kills || 0;
-            } else {
-                this.myKills = players[id].kills || 0;
-            }
-        });
-        this.scoreboard.update();
+      Object.keys(players).forEach((id) => {
+        if (id !== this.socket.id) {
+          if (!this.remotePlayers[id]) {
+            this.addRemotePlayer(players[id]);
+          }
+          const rp = this.remotePlayers[id];
+          rp.kills = players[id].kills || 0;
+          rp.updateData(players[id]);
+        } else {
+          this.myKills = players[id].kills || 0;
+        }
+      });
+      this.scoreboard.update();
     });
 
     // Gdy ktoś nowy wejdzie
@@ -180,11 +216,11 @@ export class Engine {
       this.addRemotePlayer(playerData);
       this.scoreboard.update();
     });
-  
+
     // Gdy ktoś się ruszy lub zmieni kolor
     this.socket.on("updatePlayer", (playerData) => {
       if (this.remotePlayers[playerData.id]) {
-        this.remotePlayers[playerData.id].update(playerData);
+        this.remotePlayers[playerData.id].updateData(playerData);
       }
     });
 
@@ -192,7 +228,7 @@ export class Engine {
     this.socket.on("remoteShoot", (shootData) => {
       this.projectileSystem.spawnRemoteProjectile(shootData);
     });
-  
+
     // Gdy ktoś wyjdzie
     this.socket.on("deletePlayer", (id) => {
       if (this.remotePlayers[id]) {
@@ -209,19 +245,19 @@ export class Engine {
       if (damageData.targetId === this.socket.id) {
         this.player.healthSystem.currentHealth = damageData.health;
         this.player.healthSystem.updateUI();
-        
+
         // Jeśli HP = 0, wywołaj śmierć
         if (damageData.health <= 0 && !this.player.healthSystem.isDead) {
           console.log("Triggering death manually from playerDamaged");
           this.player.healthSystem.isDead = true;
           this.player.healthSystem.onDeath();
-          
+
           // Despawn gracza
           this.player.collider.start.set(0, -1000, 0);
           this.player.collider.end.set(0, -1000 + this.player.currentHeight, 0);
           this.player.camera.position.set(0, -1000, 0);
           this.player.velocity.set(0, 0, 0);
-          
+
           // Odblokuj pointer lock
           if (this.player.controls.isLocked) {
             this.player.controls.unlock();
@@ -254,44 +290,66 @@ export class Engine {
         // Zdalny gracz się respawnuje - pokaż go z powrotem
         console.log(`Remote player ${respawnData.playerId} respawned`);
         this.remotePlayers[respawnData.playerId].mesh.visible = true;
-        this.remotePlayers[respawnData.playerId].update({
-          x: respawnData.x,
-          y: respawnData.y,
-          z: respawnData.z
-        });
+        this.remotePlayers[respawnData.playerId].teleport(
+          respawnData.x,
+          respawnData.y,
+          respawnData.z,
+        );
       }
     });
 
     this.chat.initNetwork(this.socket);
   }
-  
+
   addRemotePlayer(data) {
+    if (this.remotePlayers[data.id]) return;
     // Tworzymy obiekt RemotePlayer i zapisujemy w mapie
     this.remotePlayers[data.id] = new RemotePlayer(this.scene, data);
   }
-  
+
   update(delta) {
     if (this.isGameActive) {
       this.devTools.update();
       this.projectileSystem.update(delta);
-      
+
+      Object.values(this.remotePlayers).forEach((remotePlayer) => {
+        remotePlayer.animate(delta);
+      });
+
       if (this.player.controls.isLocked) {
         this.player.update(delta);
-        
-        if (this.socket) {
-          const pos = this.player.collider.start;
 
-          this.socket.emit("playerMove", {
-            x: pos.x,
-            y: pos.y,
-            z: pos.z,
-            rotation: this.camera.rotation.y
-          });
+        if (this.socket) {
+          const now = Date.now();
+
+          if (now - this.lastSocketUpdate > this.socketUpdateRate) {
+            const pos = this.player.collider.start;
+            const rot = this.camera.rotation.y;
+
+            // Sprawdzamy, czy gracz faktycznie się ruszył lub obrócił
+            // (Oszczędzamy transfer gdy stoi w miejscu)
+            const hasMoved = pos.distanceTo(this.lastPosition) > 0.01;
+            const hasRotated = Math.abs(rot - this.lastRotation) > 0.01;
+
+            if (hasMoved || hasRotated) {
+              this.socket.emit("playerMove", {
+                x: pos.x,
+                y: pos.y,
+                z: pos.z,
+                rotation: rot,
+              });
+
+              // Aktualizujemy zapisane pozycje i czas
+              this.lastPosition.copy(pos);
+              this.lastRotation = rot;
+              this.lastSocketUpdate = now;
+            }
+          }
         }
       }
     }
   }
-  
+
   render() {
     this.renderer.render(this.scene, this.camera);
   }
