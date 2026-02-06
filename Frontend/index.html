@@ -2,7 +2,7 @@
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
-    <title>Gra FPS Three.js - Poprawiona</title>
+    <title>Sooley Shooter</title>
     <link rel="stylesheet" href="/public/styles/style.css" />
     <link rel="stylesheet" href="/public/styles/ui.css" />
     <script type="importmap">
@@ -17,60 +17,60 @@
   </head>
   <body>
     <div id="main-menu">
-      <h1>MENU</h1>
+      <div class="menu-content glass-panel">
+        <h1 class="game-title">Sooley Shooter</h1>
 
-      <form onsubmit="return updatePlayer(event);" id="player-form">
-        <p>
-          <label for="playerColorPicker"> CHOOSE YOUR COLOR:&nbsp;&nbsp;</label
-          ><input
-            type="color"
-            name="playerColorPicker"
-            id="playerColorPicker"
-            value="#ff0000"
-          />
-        </p>
-        <p>
-          <label for="playerNameInput">CHOOSE YOUR NAME:&nbsp;&nbsp;</label
-          ><input
-            type="text"
-            id="playerNameInput"
-            name="playerNameInput"
-            placeholder="Player"
-            maxlength="50"
-          />
-        </p>
+        <form onsubmit="return updatePlayer(event);" id="player-form">
+          <div class="input-group">
+            <label for="playerNameInput">NICKNAME</label>
+            <input
+              type="text"
+              id="playerNameInput"
+              name="playerNameInput"
+              placeholder="Wpisz swój nick..."
+              maxlength="15"
+              autocomplete="off"
+            />
+          </div>
 
-        <button id="start-game-btn" class="start-btn" type="submit">
-          ZAGRAJ
-        </button>
-      </form>
+          <div class="input-group">
+            <label for="playerColorPicker">COLOR</label>
+            <div class="color-picker-wrapper">
+              <input
+                  type="color"
+                  name="playerColorPicker"
+                  id="playerColorPicker"
+                  value="#ff0000"
+              />
+            </div>
+          </div>
+
+          <button id="start-game-btn" class="custom-button start-btn" type="submit">
+            <span class="btn-text">PLAY</span>
+          </button>
+        </form>
+      </div>
+
       <script>
         function updatePlayer(event) {
           event.preventDefault();
-          // Pobieranie koloru gracza
           const colorInput = document.getElementById("playerColorPicker");
           const selectedColor = colorInput.value;
-
-          // Pobieranie nicku
           const playerNameInput = document.getElementById("playerNameInput");
-          const playerName = playerNameInput.value || "Player"; // Jak nic nie wpisze to Player
+          const playerName = playerNameInput.value || "Player";
 
-          // Zapisz kolor i nick w localStorage do użycia przy starcie gry
           localStorage.setItem("playerColor", selectedColor);
           localStorage.setItem("playerName", playerName);
-
           return false;
         }
       </script>
     </div>
 
     <div id="ui-layer">
-      <!-- DAMAGE OVERLAY -->
       <div id="damage-overlay"></div>
 
-      <!-- EKRAN ŚMIERCI -->
       <div id="death-screen">
-        <div class="death-container">
+        <div class="death-container glass-panel error-panel">
           <h1 class="death-title">YOU DIED</h1>
           <p class="death-message">You were eliminated!</p>
           <div id="respawn-btn" class="custom-button respawn-button">
@@ -79,57 +79,87 @@
         </div>
       </div>
 
-      <!-- OBRAMÓWKA GRACZA -->
       <div id="player-border">
         <div class="border-left"></div>
         <div class="border-right"></div>
       </div>
-      <!-- EKRAN PAUZY -->
+
       <div id="pause-screen">
-        <div>
-          <div class="button-container">
-            <h1>PAUSED</h1>
-            <div id="resume-btn" class="custom-button">
-              <span class="btn-text">RESUME</span>
+        <div class="glass-panel pause-container">
+            <h1 class="game-title small-title">PAUSED</h1>
+            <div class="pause-buttons">
+              <div id="resume-btn" class="custom-button">
+                <span class="btn-text">RESUME</span>
+              </div>
+              <div id="keybinds-btn" class="custom-button">
+                <span class="btn-text">CONTROLS</span>
+              </div>
             </div>
-            <div id="options-btn" class="custom-button">
-              <span class="btn-text">OPTIONS</span>
+        </div>
+      </div>
+
+      <div id="keybinds-screen">
+        <div class="keybinds-container glass-panel">
+          <h1 class="keybinds-title">CONTROLS</h1>
+          
+          <div class="keybinds-grid">
+            <div class="keybind-row">
+              <div class="keybind-key">W A S D</div>
+              <div class="keybind-desc">Movement</div>
             </div>
-            <div id="leave-btn" class="custom-button">
-              <span class="btn-text">LEAVE</span>
+            <div class="keybind-row">
+              <div class="keybind-key">MOUSE</div>
+              <div class="keybind-desc">Look Around</div>
             </div>
+            <div class="keybind-row">
+              <div class="keybind-key">LMB</div>
+              <div class="keybind-desc">Shoot</div>
+            </div>
+            <div class="keybind-row">
+              <div class="keybind-key">SPACE</div>
+              <div class="keybind-desc">Jump</div>
+            </div>
+            <div class="keybind-row">
+              <div class="keybind-key">SHIFT</div>
+              <div class="keybind-desc">Sprint</div>
+            </div>
+            <div class="keybind-row">
+              <div class="keybind-key">CTRL</div>
+              <div class="keybind-desc">Crouch</div>
+            </div>
+            <div class="keybind-row">
+              <div class="keybind-key">C</div>
+              <div class="keybind-desc">Slide</div>
+            </div>
+            <div class="keybind-row">
+              <div class="keybind-key">ENTER</div>
+              <div class="keybind-desc">Chat</div>
+            </div>
+          </div>
+          
+          <div id="keybinds-back-btn" class="custom-button back-button">
+            <span class="btn-text">BACK</span>
           </div>
         </div>
       </div>
 
       <div id="chat-container">
         <div id="chat-messages"></div>
-        <input
-          type="text"
-          id="chat-input"
-          placeholder="Naciśnij Enter, aby pisać..."
-          autocomplete="off"
-        />
+        <input type="text" id="chat-input" placeholder="Naciśnij Enter..." autocomplete="off"/>
       </div>
 
       <div id="scoreboard">
         <div class="scoreboard-header">
-          <span>#</span>
-          <span>Gracz</span>
-          <span>Kille</span>
+          <span>#</span><span>Player</span><span>Kills</span>
         </div>
         <div id="scoreboard-list"></div>
       </div>
 
       <div id="crosshair"></div>
-
-      <!-- HP Hearts -->
       <div id="hearts-container"></div>
-
       <div id="nick-container">
         <div class="player-nick-color-box"></div>
         <div class="player-nick">Player</div>
-        <!-- tu wpisuje sie nick gracza -->
       </div>
 
       <div id="slide-cooldown-container">
@@ -142,10 +172,8 @@
         <progress id="stamina-bar" value="120" max="120"></progress>
       </div>
     </div>
-    <!-- Socket.io - musi być przed main.js -->
+    
     <script src="/socket.io/socket.io.js"></script>
-
-    <!-- Twój główny skrypt gry -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

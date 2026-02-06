@@ -64,9 +64,9 @@ export class Engine {
       this,
     );
 
-    // ... wewnątrz init() po stworzeniu player'a
+    // Początkowy spawn - zostanie nadpisany przez serwer
     const spawn = this.getRandomSpawn();
-    const playerHeight = 1.6; // Upewnij się, że to pasuje do Twojej klasy Player
+    const playerHeight = 1.6;
 
     this.player.collider.start.set(spawn.x, spawn.y, spawn.z);
     this.player.collider.end.set(spawn.x, spawn.y + playerHeight, spawn.z);
@@ -106,6 +106,7 @@ export class Engine {
     const uiLayer = document.getElementById("ui-layer");
     const pauseScreen = document.getElementById("pause-screen");
     const deathScreen = document.getElementById("death-screen");
+    const keybindsScreen = document.getElementById("keybinds-screen");
     const playerBorder = document.getElementById("player-border");
     const nickDisplay = document.querySelector("#nick-container .player-nick");
     const nickColorBox = document.querySelector(
@@ -144,14 +145,16 @@ export class Engine {
       // Ukryj pause screen i death screen przy locku
       pauseScreen.style.display = "none";
       if (deathScreen) deathScreen.style.display = "none";
+      if (keybindsScreen) keybindsScreen.style.display = "none";
     });
 
     this.player.controls.addEventListener("unlock", () => {
-      // Pokaż pause screen tylko jeśli gracz nie jest martwy
+      // Pokaż pause screen tylko jeśli gracz nie jest martwy i nie ma otwartych keybinds
       if (
         this.isGameActive &&
         !this.player.healthSystem.isDead &&
-        !this.chat.isActive
+        !this.chat.isActive &&
+        keybindsScreen.style.display !== "flex"
       ) {
         pauseScreen.style.display = "flex";
       }
@@ -159,6 +162,18 @@ export class Engine {
 
     document.getElementById("resume-btn").addEventListener("click", () => {
       this.player.controls.lock();
+    });
+
+    // Keybinds button
+    document.getElementById("keybinds-btn").addEventListener("click", () => {
+      pauseScreen.style.display = "none";
+      keybindsScreen.style.display = "flex";
+    });
+
+    // Back button w keybinds
+    document.getElementById("keybinds-back-btn").addEventListener("click", () => {
+      keybindsScreen.style.display = "none";
+      pauseScreen.style.display = "flex";
     });
   }
 
@@ -182,8 +197,20 @@ export class Engine {
       Object.keys(players).forEach((id) => {
         if (id !== this.socket.id) {
           this.addRemotePlayer(players[id]);
+        } else {
+          // Ustaw pozycję gracza na spawn z serwera
+          const playerData = players[id];
+          const playerHeight = 1.6;
+          
+          this.player.collider.start.set(playerData.x, playerData.y, playerData.z);
+          this.player.collider.end.set(playerData.x, playerData.y + playerHeight, playerData.z);
+          this.player.camera.position.copy(this.player.collider.end);
+          this.player.controls.getObject().rotation.y = playerData.rotation;
+          
+          this.myKills = playerData.kills || 0;
         }
       });
+      this.scoreboard.update();
     });
 
     this.socket.on("updateKills", (data) => {
@@ -192,22 +219,6 @@ export class Engine {
       } else if (this.remotePlayers[data.playerId]) {
         this.remotePlayers[data.playerId].kills = data.kills;
       }
-      this.scoreboard.update();
-    });
-
-    this.socket.on("currentPlayers", (players) => {
-      Object.keys(players).forEach((id) => {
-        if (id !== this.socket.id) {
-          if (!this.remotePlayers[id]) {
-            this.addRemotePlayer(players[id]);
-          }
-          const rp = this.remotePlayers[id];
-          rp.kills = players[id].kills || 0;
-          rp.updateData(players[id]);
-        } else {
-          this.myKills = players[id].kills || 0;
-        }
-      });
       this.scoreboard.update();
     });
 
@@ -284,8 +295,18 @@ export class Engine {
     this.socket.on("playerRespawned", (respawnData) => {
       console.log("playerRespawned event:", respawnData);
       if (respawnData.playerId === this.socket.id) {
-        // To my się respawnujemy - już obsłużone w przycisku
-        console.log("We respawned");
+        // To my się respawnujemy - ustaw pozycję z serwera
+        console.log("We respawned at:", respawnData.x, respawnData.y, respawnData.z, "rotation:", respawnData.rotation);
+        
+        const playerHeight = 1.6;
+        this.player.collider.start.set(respawnData.x, respawnData.y, respawnData.z);
+        this.player.collider.end.set(respawnData.x, respawnData.y + playerHeight, respawnData.z);
+        this.player.camera.position.copy(this.player.collider.end);
+        this.player.velocity.set(0, 0, 0);
+        
+        // Ustaw rotację Y (kierunek patrzenia w poziomie) z serwera
+        this.player.controls.getObject().rotation.y = respawnData.rotation;
+        
       } else if (this.remotePlayers[respawnData.playerId]) {
         // Zdalny gracz się respawnuje - pokaż go z powrotem
         console.log(`Remote player ${respawnData.playerId} respawned`);
