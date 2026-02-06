@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { initWorld } from "../scenes/MainScene.js";
 import { setupInput } from "./Controls.js";
 import { Player } from "../entities/Player.js";
 import { RemotePlayer } from "../entities/RemotePlayers.js";
