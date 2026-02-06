@@ -250,21 +250,22 @@ export class Player {
   }
 
   respawn() {
-    console.log("Player.respawn called - teleporting to spawn");
-    // Teleportuj gracza na spawn point
-    this.collider.start.set(0, 0.35, 0);
-    this.collider.end.set(0, 1.6, 0);
+    console.log("Player.respawn called - waiting for server position");
+    // Pozycja będzie ustawiona przez Engine.js po otrzymaniu danych z serwera
+    // Tutaj tylko resetujemy podstawowe rzeczy
     this.velocity.set(0, 0, 0);
     this.currentHeight = 1.6;
-    this.camera.position.set(0, 1.6, 0);
     this.slideSystem.stop();
+    
+    // RESET WSZYSTKICH ROTACJI KAMERY - to naprawia dziwną rotację
+    this.camera.rotation.set(0, 0, 0);
+    this.controls.getObject().rotation.set(0, 0, 0);
 
-    console.log("Player position reset, locking controls...");
+    console.log("Player respawn preparation complete - camera rotation reset");
     // Zablokuj pointer lock ponownie
     if (!this.controls.isLocked) {
       this.controls.lock();
     }
-    console.log("Player respawn complete");
   }
 
   checkCollisions() {

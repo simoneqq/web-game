@@ -12,19 +12,36 @@ app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname, "../Frontend/index.html"));
 });
 
+// Spawn points - takie same jak w Consts.js
+const SPAWN_POINTS = [
+  { x: 15, y: 2, z: 17, angle: Math.PI / 4 },
+  { x: -13, y: 2, z: 10, angle: -Math.PI / 3 },
+  { x: 5, y: 1, z: -11, angle: Math.PI },
+  { x: 16, y: 3, z: -5, angle: Math.PI / 1.5 },
+  { x: -10, y: 2.5, z: -13, angle: -Math.PI / 1.5 },
+  { x: 6, y: 0, z: 12, angle: Math.PI / 2 },
+  { x: 0, y: 0, z: 0, angle: -Math.PI / 1.5 },
+];
+
+function getRandomSpawn() {
+  return SPAWN_POINTS[Math.floor(Math.random() * SPAWN_POINTS.length)];
+}
+
 const players = {};
 
 io.on("connection", function (socket) {
   console.log(`${socket.id} connected`);
 
+  const spawn = getRandomSpawn();
+  
   players[socket.id] = {
     id: socket.id,
     color: "#ff0000", // default color
     nick: "Player", // default nick
-    x: 0,
-    y: 10,
-    z: 0,
-    rotation: 0,
+    x: spawn.x,
+    y: spawn.y,
+    z: spawn.z,
+    rotation: spawn.angle,
     health: 5, // HP gracza
     kills: 0,
   };
@@ -45,6 +62,7 @@ io.on("connection", function (socket) {
   });
 
   socket.on("playerShoot", function (shootData) {
+    shootData.ownerId = socket.id;
     socket.broadcast.emit("remoteShoot", shootData);
   });
 
@@ -77,6 +95,7 @@ io.on("connection", function (socket) {
       });
 
       if (players[hitData.targetId].health <= 0) {
+        // Zwiększ kille zabójcy
         if (players[socket.id]) {
           players[socket.id].kills++;
 
@@ -86,9 +105,23 @@ io.on("connection", function (socket) {
           });
         }
 
+        // Wyślij informację o śmierci
         io.emit("playerDied", {
           playerId: hitData.targetId,
           killerId: socket.id,
+        });
+
+        // Wyślij komunikat o zabójstwie do chatu
+        const killerNick = players[socket.id] ? players[socket.id].nick : "Unknown";
+        const victimNick = players[hitData.targetId] ? players[hitData.targetId].nick : "Unknown";
+        const killerColor = players[socket.id] ? players[socket.id].color : "#ffffff";
+        const victimColor = players[hitData.targetId] ? players[hitData.targetId].color : "#ffffff";
+
+        io.emit("killMessage", {
+          killerNick: killerNick,
+          victimNick: victimNick,
+          killerColor: killerColor,
+          victimColor: victimColor,
         });
       }
     }
@@ -108,16 +141,21 @@ io.on("connection", function (socket) {
 
   socket.on("playerRespawn", function () {
     if (players[socket.id]) {
+      // Losowy spawn po każdym respawnie
+      const spawn = getRandomSpawn();
+      
       players[socket.id].health = 5;
-      players[socket.id].x = 0;
-      players[socket.id].y = 10;
-      players[socket.id].z = 0;
+      players[socket.id].x = spawn.x;
+      players[socket.id].y = spawn.y;
+      players[socket.id].z = spawn.z;
+      players[socket.id].rotation = spawn.angle;
 
       io.emit("playerRespawned", {
         playerId: socket.id,
-        x: 0,
-        y: 10,
-        z: 0,
+        x: spawn.x,
+        y: spawn.y,
+        z: spawn.z,
+        rotation: spawn.angle,
         health: 5,
       });
     }

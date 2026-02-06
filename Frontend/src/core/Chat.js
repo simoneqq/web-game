@@ -19,8 +19,14 @@ export class Chat {
 
     initNetwork(socket) {
         this.socket = socket;
+        
         this.socket.on("chatMessage", (data) => {
             this.addMessage(data.author, data.text, data.color);
+        });
+
+        // Obsługa komunikatów o zabójstwach
+        this.socket.on("killMessage", (data) => {
+            this.addKillMessage(data.killerNick, data.victimNick, data.killerColor, data.victimColor);
         });
     }
 
@@ -50,6 +56,20 @@ export class Chat {
         const msgEl = document.createElement("div");
         msgEl.className = "chat-message";
         msgEl.innerHTML = `<span style="color: ${color}">${author}:</span> ${text}`;
+        
+        this.messagesEnd.appendChild(msgEl);
+        
+        this.messagesEnd.scrollTop = this.messagesEnd.scrollHeight;
+
+        if (this.messagesEnd.childNodes.length > 50) {
+            this.messagesEnd.removeChild(this.messagesEnd.firstChild);
+        }
+    }
+
+    addKillMessage(killerNick, victimNick, killerColor, victimColor) {
+        const msgEl = document.createElement("div");
+        msgEl.className = "chat-message kill-message";
+        msgEl.innerHTML = `<span style="color: ${killerColor}">⚔️ ${killerNick}</span> <span style="color: #888">eliminated</span> <span style="color: ${victimColor}">${victimNick}</span>`;
         
         this.messagesEnd.appendChild(msgEl);
         
